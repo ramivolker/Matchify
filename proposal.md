@@ -16,7 +16,7 @@
 *Matchify es la app ideal para conocer nuevas personas. Explorá perfiles, filtrá según tus preferencias y generá matches cuando haya interés mutuo. Una vez conectados, podés chatear y empezar a crear nuevas experiencias.*
 
 ### Modelo
-![[imagen del modelo](https://imgur.com/a/fkRNebw)]()
+![[imagen del modelo]([https://imgur.com/a/fkRNebw](https://i.imgur.com/hLJ0P7c.jpeg))]
 
 
 ## Alcance Funcional 
@@ -30,6 +30,13 @@ Regularidad:
 |CRUD dependiente|1. CRUD Foto {depende de} CRUD Usuario<br>2. CRUD Bloqueo {depende de} CRUD Usuario<br>3. CRUD Preferencia {depende de} CRUD Usuario<br>4. CRUD Match {depende de} CRUD Usuario<br>5. CRUD Chat {depende de} CRUD Match|
 |Listado<br>+<br>detalle| 1. Listado de usuarios filtrado por distancia, muestra usuarios dentro del rango establecido => detalle CRUD Usuario<br>|
 |CUU/Epic|1. Login del usuario<br>2. Dar like a otro usuario<br>3. Chatear con otro usuario<br>|
+
+
+
+
+
+
+
 
 
 Adicionales para Aprobación
