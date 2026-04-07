@@ -27,7 +27,7 @@ Regularidad:
 |Req|Detalle|
 |:-|:-|
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Ubicacion<br>3. CRUD Hobbie<br>|
-|CRUD dependiente|<br><br>1. CRUD Preferencia {depende de} CRUD Usuario|
+|CRUD dependiente|1. CRUD Preferencia {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de usuarios filtrado por distancia, muestra usuarios dentro del rango establecido => detalle CRUD Usuario<br>|
 |CUU/Epic|1. Login del usuario<br>2. Dar like a otro usuario<br>3. Matchear con otro usuario<br>4. Bloquear a otro usuario|
 
