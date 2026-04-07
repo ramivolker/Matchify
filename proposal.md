@@ -16,7 +16,7 @@
 *Matchify es la app ideal para conocer nuevas personas. Explorá perfiles, filtrá según tus preferencias y generá matches cuando haya interés mutuo. Una vez conectados, podés chatear y empezar a crear nuevas experiencias.*
 
 ### Modelo
-![[imagen del modelo]([https://imgur.com/a/fkRNebw](https://i.imgur.com/hLJ0P7c.jpeg))]
+![Imagen del modelo](./ddsfw.jpg)
 
 
 ## Alcance Funcional 
