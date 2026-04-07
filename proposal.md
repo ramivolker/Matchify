@@ -27,28 +27,22 @@ Regularidad:
 |Req|Detalle|
 |:-|:-|
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Ubicacion<br>3. CRUD Hobbie<br>|
-|CRUD dependiente|1. CRUD Foto {depende de} CRUD Usuario<br>2. CRUD Bloqueo {depende de} CRUD Usuario<br>3. CRUD Preferencia {depende de} CRUD Usuario<br>4. CRUD Match {depende de} CRUD Usuario<br>5. CRUD Chat {depende de} CRUD Match|
+|CRUD dependiente|<br><br>1. CRUD Preferencia {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de usuarios filtrado por distancia, muestra usuarios dentro del rango establecido => detalle CRUD Usuario<br>|
-|CUU/Epic|1. Login del usuario<br>2. Dar like a otro usuario<br>3. Chatear con otro usuario<br>|
-
-
-
-
-
-
-
+|CUU/Epic|1. Login del usuario<br>2. Dar like a otro usuario<br>3. Matchear con otro usuario<br>4. Bloquear a otro usuario|
 
 
 Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
-|CRUD |1. CRUD Tipo Habitacion<br>2. CRUD Servicio<br>3. CRUD Localidad<br>4. CRUD Provincia<br>5. CRUD Habitación<br>6. CRUD Empleado<br>7. CRUD Cliente|
-|CUU/Epic|1. Reservar una habitación para la estadía<br>2. Realizar el check-in de una reserva<br>3. Realizar el check-out y facturación de estadía y servicios|
-
+|CRUD |1. CRUD Chat {depende de} CRUD Match|
+|CUU/Epic|1. Chatear con otro usuario <br>2. Denunciar a otro usuario|
 
 ### Alcance Adicional Voluntario
 
 *Nota*: El Alcance Adicional Voluntario es opcional, pero ayuda a que la funcionalidad del sistema esté completa y será considerado en la nota en función de su complejidad y esfuerzo.
+
+Todavía no definido.
 
 |Req|Detalle|
 |:-|:-|
