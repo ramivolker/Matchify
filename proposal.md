@@ -27,7 +27,7 @@ Regularidad:
 |Req|Detalle|
 |:-|:-|
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Ubicacion<br>3. CRUD Hobbie<br>|
-|CRUD dependiente|1. CRUD Preferencia {depende de} CRUD Usuario|
+|CRUD dependiente|1. CRUD Preferencia {depende de} CRUD Usuario<br>2. CRUD TipoUsuario {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de usuarios filtrado por distancia, muestra usuarios dentro del rango establecido => detalle CRUD Usuario<br>|
 |CUU/Epic|1. Matchear con otro usuario<br>2. Bloquear a otro usuario<br>3. Chatear con otro usuario |
 
@@ -35,14 +35,12 @@ Regularidad:
 Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
-|CRUD |1.|
 |CUU/Epic|<br>1. Denunciar a otro usuario <br>2. Agregar fotos|
 
 ### Alcance Adicional Voluntario
 
 *Nota*: El Alcance Adicional Voluntario es opcional, pero ayuda a que la funcionalidad del sistema esté completa y será considerado en la nota en función de su complejidad y esfuerzo.
 
-Todavía no definido.
 
 |Req|Detalle|
 |:-|:-|
