@@ -29,14 +29,14 @@ Regularidad:
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Ubicacion<br>3. CRUD Hobbie<br>|
 |CRUD dependiente|1. CRUD Preferencia {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de usuarios filtrado por distancia, muestra usuarios dentro del rango establecido => detalle CRUD Usuario<br>|
-|CUU/Epic|1. Login del usuario<br>2. Dar like a otro usuario<br>3. Matchear con otro usuario<br>4. Bloquear a otro usuario|
+|CUU/Epic|1. Matchear con otro usuario<br>2. Bloquear a otro usuario<br>3. Chatear con otro usuario |
 
 
 Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
-|CRUD |1. CRUD Chat {depende de} CRUD Match|
-|CUU/Epic|1. Chatear con otro usuario <br>2. Denunciar a otro usuario <br>3. Agregar fotos|
+|CRUD |1.|
+|CUU/Epic|<br>1. Denunciar a otro usuario <br>2. Agregar fotos|
 
 ### Alcance Adicional Voluntario
 
