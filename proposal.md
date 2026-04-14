@@ -35,7 +35,7 @@ Regularidad:
 Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
-|CUU/Epic|<br>1. Denunciar a otro usuario <br>2. Agregar fotos|
+|CUU/Epic|1. Denunciar a otro usuario <br>2. Agregar fotos|
 
 ### Alcance Adicional Voluntario
 
@@ -46,5 +46,5 @@ Adicionales para Aprobación
 |:-|:-|
 |Listados |1. Listado de usuarios filtrados por preferencias de usuario <br>|
 |CUU/Epic|1. Terminar Match<br>2. |
-|Otros|1. |
+|Otros| |
 
