@@ -36,7 +36,7 @@ Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
 |CRUD |1. CRUD Chat {depende de} CRUD Match|
-|CUU/Epic|1. Chatear con otro usuario <br>2. Denunciar a otro usuario <br>3.Agregar fotos|
+|CUU/Epic|1. Chatear con otro usuario <br>2. Denunciar a otro usuario <br>3. Agregar fotos|
 
 ### Alcance Adicional Voluntario
 
