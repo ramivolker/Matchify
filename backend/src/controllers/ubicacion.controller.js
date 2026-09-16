@@ -1,57 +1,39 @@
 const ubicacionService = require("../services/ubicacion.service");
+const asyncHandler = require("../middlewares/async-handler");
 
-const crear = async (req, res) => {
-  try {
-    const ubicacion = await ubicacionService.crear(req.body);
+const crear = asyncHandler(async (req, res) => {
+  const ubicacion = await ubicacionService.crear(req.body);
 
-    res.status(201).json(ubicacion);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  res.status(201).json(ubicacion);
+});
 
-const obtenerTodas = async (req, res) => {
-  try {
-    const ubicaciones = await ubicacionService.obtenerTodas();
+const obtenerTodas = asyncHandler(async (req, res) => {
+  const ubicaciones = await ubicacionService.obtenerTodas();
 
-    res.status(200).json(ubicaciones);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  res.status(200).json(ubicaciones);
+});
 
-const obtenerPorId = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const ubicacion = await ubicacionService.obtenerPorId(id);
+const obtenerPorId = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const ubicacion = await ubicacionService.obtenerPorId(id);
 
-    res.status(200).json(ubicacion);
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
-};
+  res.status(200).json(ubicacion);
+});
 
-const actualizar = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const ubicacion = await ubicacionService.actualizar(id, req.body);
+const actualizar = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const ubicacion = await ubicacionService.actualizar(id, req.body);
 
-    res.status(200).json(ubicacion);
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
-};
+  res.status(200).json(ubicacion);
+});
 
-const eliminar = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    await ubicacionService.eliminar(id);
+const eliminar = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
 
-    res.status(204).send();
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
-};
+  await ubicacionService.eliminar(id);
+
+  res.status(204).send();
+});
 
 module.exports = {
   crear,
