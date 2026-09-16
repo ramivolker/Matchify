@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id              Int      @id @default(autoincrement())
+  nombre          String
+  apellido        String
+  email           String   @unique
+  fechaNacimiento DateTime
+  biografia       String?  @db.VarChar(500)
+  activo          Boolean  @default(true)
+  creadoEn        DateTime @default(now())
+  actualizadoEn   DateTime @updatedAt
+
+  ubicacionId Int?
+  ubicacion   Ubicacion? @relation(fields: [ubicacionId], references: [id])
+
+  tipoUsuarioId Int?
+  tipoUsuario   TipoUsuario? @relation(fields: [tipoUsuarioId], references: [id])
+
+  preferencia Preferencia?
+
+  hobbies UsuarioHobbie[]
+}
+
+model Ubicacion {
+  id        Int    @id @default(autoincrement())
+  ciudad    String
+  provincia String
+  pais      String
+
+  usuarios Usuario[]
+}
+
+model Hobbie {
+  id          Int    @id @default(autoincrement())
+  nombre      String @unique
+  descripcion String?
+
+  usuarios UsuarioHobbie[]
+}
+
+model UsuarioHobbie {
+  usuarioId Int
+  hobbieId  Int
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  hobbie  Hobbie  @relation(fields: [hobbieId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, hobbieId])
+}
+
+model Preferencia {
+  id             Int @id @default(autoincrement())
+  usuarioId      Int @unique
+  distanciaMaxKm Int @default(50)
+  edadMinima     Int
+  edadMaxima     Int
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+model TipoUsuario {
+  id          Int    @id @default(autoincrement())
+  nombre      String @unique
+  descripcion String?
+
+  usuarios Usuario[]
+}
