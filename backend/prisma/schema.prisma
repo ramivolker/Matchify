@@ -34,6 +34,8 @@ model Ubicacion {
   ciudad    String
   provincia String
   pais      String
+  latitud   Float
+  longitud  Float
 
   usuarios Usuario[]
 }

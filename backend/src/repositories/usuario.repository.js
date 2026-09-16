@@ -5,13 +5,13 @@ const crear = async (datos) => {
 };
 
 const obtenerTodos = async () => {
-  return prisma.usuario.findMany({ include: { ubicacion: true } });
+  return prisma.usuario.findMany({ include: { ubicacion: true, tipoUsuario: true } });
 };
 
 const obtenerPorId = async (id) => {
   return prisma.usuario.findUnique({
     where: { id },
-    include: { ubicacion: true },
+    include: { ubicacion: true, tipoUsuario: true },
   });
 };
 
