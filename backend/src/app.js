@@ -1,12 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 const ubicacionRoutes = require("./routes/ubicacion.routes");
+const hobbieRoutes = require("./routes/hobbie.routes");
+const usuarioRoutes = require("./routes/usuario.routes");
+const usuarioHobbieRoutes = require("./routes/usuario-hobbie.routes");
 const app = express();
 const errorHandler = require("./middlewares/error.middleware");
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/ubicaciones", ubicacionRoutes);
+app.use("/api/hobbies", hobbieRoutes);
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/usuarios", usuarioHobbieRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
