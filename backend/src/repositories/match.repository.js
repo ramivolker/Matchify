@@ -14,6 +14,24 @@ async function crearMatch(usuarioAId, usuarioBId) {
   });
 }
 
+async function obtenerMatchesPorUsuario(usuarioId) {
+  return prisma.match.findMany({
+    where: {
+      OR: [
+        { usuario1Id: usuarioId },
+        { usuario2Id: usuarioId },
+      ],
+      activo: true,
+    },
+    include: {
+      usuario1: true,
+      usuario2: true,
+    },
+  });
+}
+
 module.exports = {
   crearMatch,
+  obtenerMatchesPorUsuario,
 };
+
