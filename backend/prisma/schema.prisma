@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TipoInteraccion {
+  LIKE
+  DISLIKE
+}
+
 model Usuario {
   id              Int      @id @default(autoincrement())
   nombre          String
@@ -27,6 +32,12 @@ model Usuario {
   preferencia Preferencia?
 
   hobbies UsuarioHobbie[]
+
+  interaccionesEnviadas  Interaccion[] @relation("InteraccionesEnviadas")
+  interaccionesRecibidas Interaccion[] @relation("InteraccionesRecibidas")
+
+  matchesComoUsuario1 Match[] @relation("MatchUsuario1")
+  matchesComoUsuario2 Match[] @relation("MatchUsuario2")
 }
 
 model Ubicacion {
@@ -41,8 +52,8 @@ model Ubicacion {
 }
 
 model Hobbie {
-  id          Int    @id @default(autoincrement())
-  nombre      String @unique
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique
   descripcion String?
 
   usuarios UsuarioHobbie[]
@@ -69,9 +80,39 @@ model Preferencia {
 }
 
 model TipoUsuario {
-  id          Int    @id @default(autoincrement())
-  nombre      String @unique
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique
   descripcion String?
 
   usuarios Usuario[]
+}
+
+model Interaccion {
+  id    Int             @id @default(autoincrement())
+  tipo  TipoInteraccion
+  fecha DateTime        @default(now())
+
+  usuarioEmisorId       Int
+  usuarioDestinatarioId Int
+
+  usuarioEmisor Usuario @relation("InteraccionesEnviadas", fields: [usuarioEmisorId], references: [id], onDelete: Cascade)
+
+  usuarioDestinatario Usuario @relation("InteraccionesRecibidas", fields: [usuarioDestinatarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioEmisorId, usuarioDestinatarioId])
+}
+
+model Match {
+  id     Int      @id @default(autoincrement())
+  fecha  DateTime @default(now())
+  activo Boolean  @default(true)
+
+  usuario1Id Int
+  usuario2Id Int
+
+  usuario1 Usuario @relation("MatchUsuario1", fields: [usuario1Id], references: [id], onDelete: Cascade)
+
+  usuario2 Usuario @relation("MatchUsuario2", fields: [usuario2Id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario1Id, usuario2Id])
 }
