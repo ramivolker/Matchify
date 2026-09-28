@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 export default function TinderDeck({
-  usuarios,
-  currentUserId,
+  candidatos,
+  currentUser,
   onSwipe,
   onRewind,
   onOpenDetail,
@@ -10,10 +10,8 @@ export default function TinderDeck({
   const [swipeAnimation, setSwipeAnimation] = useState(''); // 'left' | 'right' | 'up' | ''
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Perfiles a mostrar: todos los activos excepto el usuario logueado
-  const deckQueue = usuarios.filter((u) => u.id !== currentUserId && u.activo !== false);
-
-  const currentUser = usuarios.find((u) => u.id === currentUserId);
+  // La API determina los candidatos válidos para el usuario seleccionado.
+  const deckQueue = candidatos;
   const activeProfile = deckQueue[currentIndex];
 
   const handleAction = (direction) => {
@@ -60,14 +58,14 @@ export default function TinderDeck({
   return (
     <div className="tinder-deck-wrapper">
       <div className="tinder-deck">
-        {!usuarios.length || !currentUserId ? (
+        {!deckQueue.length ? (
           <div className="tinder-empty-state">
             <div className="radar-wrap">
               <div className="radar-wave"></div>
               <div className="radar-center">👥</div>
             </div>
-            <h4>No hay usuarios registrados</h4>
-            <p>Crea perfiles en el panel de Admin para empezar a hacer match.</p>
+            <h4>No hay candidatos disponibles</h4>
+            <p>No se encontraron candidatos para este usuario en este momento.</p>
           </div>
         ) : currentIndex >= deckQueue.length ? (
           <div className="tinder-empty-state">
@@ -122,6 +120,12 @@ export default function TinderDeck({
                     ? `${activeProfile.ubicacion.ciudad}, ${activeProfile.ubicacion.provincia}`
                     : 'Ubicación oculta'}
                 </div>
+                {Number.isFinite(activeProfile.distanciaKm) && (
+                  <div className="tinder-location">A {activeProfile.distanciaKm} km</div>
+                )}
+                {activeProfile.tipoUsuario && (
+                  <div className="tinder-location">{activeProfile.tipoUsuario.nombre}</div>
+                )}
                 <p className="tinder-bio">
                   {activeProfile.biografia || 'Sin biografía disponible aún.'}
                 </p>

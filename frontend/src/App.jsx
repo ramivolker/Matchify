@@ -40,6 +40,9 @@ export default function App() {
 
   // Tinder Session State
   const [currentTinderUserId, setCurrentTinderUserId] = useState(null);
+  const [candidatosState, setCandidatosState] = useState({
+    usuarioId: null, datos: [], loading: false, error: '',
+  });
   const [sessionMatches, setSessionMatches] = useState([]);
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
 
@@ -58,6 +61,26 @@ export default function App() {
     checkHealth();
     cargarTodo();
   }, []);
+
+  useEffect(() => {
+    if (appMode !== 'user' || !currentTinderUserId) return;
+    let vigente = true;
+    setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: true, error: '' });
+
+    api.getCandidatos(currentTinderUserId)
+      .then((datos) => {
+        if (vigente) {
+          setCandidatosState({ usuarioId: currentTinderUserId, datos, loading: false, error: '' });
+        }
+      })
+      .catch((error) => {
+        if (vigente) {
+          setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: false, error: error.message });
+        }
+      });
+
+    return () => { vigente = false; };
+  }, [currentTinderUserId, appMode]);
 
   // Keyboard accessibility: ESC cierra cualquier modal abierto
   useEffect(() => {
@@ -435,15 +458,22 @@ export default function App() {
             </div>
 
             {/* Vista de Deslizar Perfiles (Swipe Deck) */}
-            {currentUserTab === 'swipe' && (
+            {currentUserTab === 'swipe' && (!currentTinderUserId ? (
+              <div className="tinder-empty-state" role="status">Seleccioná un usuario para explorar candidatos.</div>
+            ) : candidatosState.usuarioId !== currentTinderUserId || candidatosState.loading ? (
+              <div className="tinder-empty-state" role="status">Cargando candidatos...</div>
+            ) : candidatosState.error ? (
+              <div className="tinder-empty-state" role="alert">{candidatosState.error}</div>
+            ) : (
               <TinderDeck
-                usuarios={usuarios}
-                currentUserId={currentTinderUserId}
+                key={currentTinderUserId}
+                candidatos={candidatosState.datos}
+                currentUser={usuarios.find((u) => u.id === currentTinderUserId)}
                 onSwipe={handleTinderSwipe}
                 onRewind={() => showToast('Baraja reiniciada 🔄', 'info')}
                 onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
               />
-            )}
+            ))}
 
             {/* Vista de Matches */}
             {currentUserTab === 'matches' && (

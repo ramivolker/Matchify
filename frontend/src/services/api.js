@@ -10,6 +10,15 @@ export const api = {
   },
 
   // Usuarios
+  async getCandidatos(usuarioId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/candidatos`);
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.error || 'Error al obtener candidatos');
+    }
+    return res.json();
+  },
+
   async getUsuarios() {
     const res = await fetch(`${API_BASE}/usuarios`);
     if (!res.ok) throw new Error('Error al obtener usuarios');
