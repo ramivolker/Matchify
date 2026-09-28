@@ -5,7 +5,13 @@ const crear = async (datos) => {
 };
 
 const obtenerTodos = async () => {
-  return prisma.usuario.findMany({ include: { ubicacion: true, tipoUsuario: true } });
+  return prisma.usuario.findMany({
+    include: {
+      ubicacion: true,
+      tipoUsuario: true,
+      hobbies: { include: { hobbie: true } },
+    },
+  });
 };
 
 const obtenerPorId = async (id) => {
