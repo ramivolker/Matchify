@@ -12,6 +12,7 @@ const obtenerCandidatos = async (usuarioId) => {
     where: {
       id: { not: usuarioId },
       activo: true,
+      interaccionesRecibidas: { none: { usuarioEmisorId: usuarioId } },
       ubicacion: { isNot: null },
     },
     select: {
