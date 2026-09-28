@@ -1,129 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 export default function TinderDeck({
   usuarios = [],
-  candidatos,
+  candidatos = [],
+  disabled = false,
   currentUserId,
-  currentUser: propCurrentUser,
+  currentUser: currentUserProp,
   onSwipe,
   onRewind,
   onOpenDetail,
-  onOpenReport,
-  blockedUserIds = [],
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [photoIndex, setPhotoIndex] = useState(0);
+  const [pending, setPending] = useState(false);
+  const actionLock = useRef(false);
 
-  // Touch gesture & drag states
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [swipeAnimation, setSwipeAnimation] = useState(''); // 'left' | 'right' | 'up' | ''
-  const startPosRef = useRef({ x: 0, y: 0 });
+  const deckQueue = candidatos;
 
-  // Filter available deck queue
-  const deckQueue = candidatos || (usuarios || []).filter(
-    (u) =>
-      u.id !== currentUserId &&
-      u.activo !== false &&
-      !blockedUserIds.includes(u.id)
-  );
+  const currentUser =
+    currentUserProp ??
+    usuarios.find((u) => u.id === currentUserId);
 
-  const currentUser = propCurrentUser || (usuarios || []).find((u) => u.id === currentUserId);
-  const activeProfile = deckQueue[currentIndex];
-
-  // Reset photo index on profile change
-  useEffect(() => {
-    setPhotoIndex(0);
-  }, [currentIndex]);
-
-  // Keyboard navigation for Desktop
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ignorar si el usuario está escribiendo en un input o textarea
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-
-      if (!activeProfile) return;
-
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        triggerAction('right');
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        triggerAction('left');
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        triggerAction('up');
-      } else if (e.code === 'Space') {
-        e.preventDefault();
-        onOpenDetail(activeProfile);
-      } else if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        handleRewind();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeProfile, currentIndex, deckQueue]);
-
-  const triggerAction = (direction) => {
-    if (!activeProfile) return;
-
-    // Haptic feedback
-    if (navigator.vibrate) {
-      if (direction === 'up') navigator.vibrate([20, 30, 20]);
-      else navigator.vibrate(20);
-    }
-
-    setSwipeAnimation(direction);
-    setTimeout(() => {
-      onSwipe(activeProfile, direction);
-      setCurrentIndex((prev) => prev + 1);
-      setSwipeAnimation('');
-      setDragOffset({ x: 0, y: 0 });
-    }, 280);
-  };
-
-  const handleRewind = () => {
-    if (navigator.vibrate) navigator.vibrate(15);
-    setCurrentIndex(0);
-    onRewind();
-  };
-
-  // Touch handlers for mobile fluid swipe
-  const handleTouchStart = (e) => {
-    if (!activeProfile) return;
-    const touch = e.touches[0];
-    startPosRef.current = { x: touch.clientX, y: touch.clientY };
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging || !activeProfile) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPosRef.current.x;
-    const deltaY = touch.clientY - startPosRef.current.y;
-    setDragOffset({ x: deltaX, y: deltaY });
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging || !activeProfile) return;
-    setIsDragging(false);
-
-    const thresholdX = 90;
-    const thresholdY = -100;
-
-    if (dragOffset.x > thresholdX) {
-      triggerAction('right');
-    } else if (dragOffset.x < -thresholdX) {
-      triggerAction('left');
-    } else if (dragOffset.y < thresholdY) {
-      triggerAction('up');
-    } else {
-      // Revert position
-      setDragOffset({ x: 0, y: 0 });
+  const activeProfile = deckQueue[0];
+  
+  const handleAction = async (direction) => {
+    if (!activeProfile || disabled || actionLock.current) return;
+    actionLock.current = true;
+    setPending(true);
+    try {
+      await onSwipe(activeProfile, direction);
+    } finally {
+      actionLock.current = false;
+      setPending(false);
     }
   };
+  const handleRewind = () => { if (!pending && !disabled) onRewind(); };
 
   const calcularEdad = (fechaString) => {
     if (!fechaString) return '-';
@@ -197,7 +106,7 @@ export default function TinderDeck({
             <h4>No hay candidatos disponibles</h4>
             <p>No se encontraron perfiles o candidatos para este usuario en este momento.</p>
           </div>
-        ) : currentIndex >= deckQueue.length ? (
+        ) : !activeProfile ? (
           <div className="tinder-empty-state">
             <div className="radar-wrap">
               <div className="radar-wave"></div>
@@ -206,16 +115,17 @@ export default function TinderDeck({
             <h4>¡Te pusiste al día!</h4>
             <p>Has explorado todos los perfiles cercanos por el momento.</p>
             <button
+            disabled={pending || disabled}
               className="btn btn-primary btn-sm"
               onClick={handleRewind}
               style={{ marginTop: '1rem' }}
             >
-              🔄 Volver a empezar
+              🔄 Buscar nuevos perfiles
             </button>
           </div>
         ) : (
           <div
-            className={`tinder-card ${swipeAnimation ? `swipe-${swipeAnimation}` : ''}`}
+            className="tinder-card"
             key={activeProfile.id}
             style={dynamicCardStyle}
             onTouchStart={handleTouchStart}
@@ -336,68 +246,49 @@ export default function TinderDeck({
         )}
       </div>
 
-      {/* Action Buttons Floating Bar with KBD Key Indicators */}
-      {currentIndex < deckQueue.length && (
-        <div className="tinder-controls" role="group" aria-label="Controles de interacción">
-          <div className="control-btn-wrapper">
-            <button
-              className="tinder-btn btn-rewind"
-              onClick={handleRewind}
-              title="Rebobinar perfil anterior (R)"
-              aria-label="Rebobinar"
-            >
-              <span>🔄</span>
-            </button>
-            <span className="kbd-shortcut-tag">R</span>
-          </div>
-
-          <div className="control-btn-wrapper">
-            <button
-              className="tinder-btn btn-dislike"
-              onClick={() => triggerAction('left')}
-              title="Descartar perfil (Flecha Izquierda)"
-              aria-label="Descartar"
-            >
-              <span>✕</span>
-            </button>
-            <span className="kbd-shortcut-tag">←</span>
-          </div>
-
-          <div className="control-btn-wrapper">
-            <button
-              className="tinder-btn btn-superlike"
-              onClick={() => triggerAction('up')}
-              title="¡Super Like! (Flecha Arriba)"
-              aria-label="Super Like"
-            >
-              <span>★</span>
-            </button>
-            <span className="kbd-shortcut-tag">↑</span>
-          </div>
-
-          <div className="control-btn-wrapper">
-            <button
-              className="tinder-btn btn-like"
-              onClick={() => triggerAction('right')}
-              title="¡Me Gusta / Match! (Flecha Derecha)"
-              aria-label="Me gusta"
-            >
-              <span>💚</span>
-            </button>
-            <span className="kbd-shortcut-tag">→</span>
-          </div>
-
-          <div className="control-btn-wrapper">
-            <button
-              className="tinder-btn btn-info"
-              onClick={() => onOpenDetail(activeProfile)}
-              title="Ver perfil completo (Barra Espaciadora)"
-              aria-label="Ver perfil completo"
-            >
-              <span>ℹ️</span>
-            </button>
-            <span className="kbd-shortcut-tag">Espacio</span>
-          </div>
+      {/* Botones de Acción */}
+      {activeProfile && (
+        <div className="tinder-controls">
+          <button
+            disabled={pending || disabled}
+            className="tinder-btn btn-rewind"
+            onClick={handleRewind}
+            title="Buscar nuevos perfiles"
+          >
+            <span>🔄</span>
+          </button>
+          <button
+            disabled={pending || disabled}
+            className="tinder-btn btn-dislike"
+            onClick={() => handleAction('left')}
+            title="Pasar (Dislike)"
+          >
+            <span>✕</span>
+          </button>
+          <button
+            disabled={pending || disabled}
+            className="tinder-btn btn-superlike"
+            onClick={() => handleAction('up')}
+            title="Like (★)"
+          >
+            <span>★</span>
+          </button>
+          <button
+            disabled={pending || disabled}
+            className="tinder-btn btn-like"
+            onClick={() => handleAction('right')}
+            title="Like"
+          >
+            <span>💚</span>
+          </button>
+          <button
+            disabled={pending || disabled}
+            className="tinder-btn btn-info"
+            onClick={() => onOpenDetail(activeProfile)}
+            title="Ver información completa"
+          >
+            <span>ℹ️</span>
+          </button>
         </div>
       )}
     </div>
