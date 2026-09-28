@@ -40,6 +40,9 @@ export default function App() {
 
   // Tinder Session State
   const [currentTinderUserId, setCurrentTinderUserId] = useState(null);
+  const [candidatosState, setCandidatosState] = useState({
+    usuarioId: null, datos: [], loading: false, error: '',
+  });
   const [sessionMatches, setSessionMatches] = useState([]);
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
 
@@ -97,6 +100,26 @@ export default function App() {
     checkHealth();
     cargarTodo();
   }, []);
+
+  useEffect(() => {
+    if (appMode !== 'user' || !currentTinderUserId) return;
+    let vigente = true;
+    setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: true, error: '' });
+
+    api.getCandidatos(currentTinderUserId)
+      .then((datos) => {
+        if (vigente) {
+          setCandidatosState({ usuarioId: currentTinderUserId, datos, loading: false, error: '' });
+        }
+      })
+      .catch((error) => {
+        if (vigente) {
+          setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: false, error: error.message });
+        }
+      });
+
+    return () => { vigente = false; };
+  }, [currentTinderUserId, appMode]);
 
   // Keyboard accessibility: ESC cierra cualquier modal abierto
   useEffect(() => {
@@ -446,15 +469,19 @@ export default function App() {
             ========================================================================= */}
         {appMode === 'user' && (
           <div className="app-view-container">
+
             {/* Top Bar Tinder: Selector de usuario activo */}
             <div className="tinder-top-bar">
               <div className="tinder-identity-box">
                 <span className="tinder-id-label">Navegando como:</span>
+
                 <select
                   className="form-control tinder-select-user"
                   disabled={savingInteraction}
                   value={currentTinderUserId || ''}
-                  onChange={(e) => setCurrentTinderUserId(parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    setCurrentTinderUserId(parseInt(e.target.value, 10))
+                  }
                 >
                   {usuarios.map((u) => (
                     <option key={u.id} value={u.id}>
@@ -468,23 +495,54 @@ export default function App() {
                 className="tinder-stats-pill"
                 onClick={() => setCurrentUserTab('matches')}
               >
-                <span>💬 Matches:</span> <strong>{sessionMatches.length}</strong>
+                <span>💬 Matches:</span>{' '}
+                <strong>{sessionMatches.length}</strong>
               </div>
             </div>
 
-            {/* Vista de Deslizar Perfiles (Swipe Deck) */}
-            {tinderError && <div role="alert">{tinderError} <button className="btn btn-secondary btn-sm" onClick={() => setRefreshTinder((n) => n + 1)}>Reintentar</button></div>}
-            {tinderLoading && <p role="status">Cargando candidatos y matches…</p>}
+            {/* Vista de Deslizar Perfiles */}
+            {tinderError && (
+              <div role="alert">
+                {tinderError}{' '}
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setRefreshTinder((n) => n + 1)}
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {tinderLoading && (
+              <p role="status">
+                Cargando candidatos y matches…
+              </p>
+            )}
+
             {currentUserTab === 'swipe' && !tinderLoading && (
               <TinderDeck
                 key={currentTinderUserId}
                 usuarios={usuarios}
-                candidatos={candidatos.filter((u) => !(seenByUser[currentTinderUserId] || []).includes(u.id) && !sessionMatches.some((m) => m.id === u.id))}
+                candidatos={candidatos.filter(
+                  (u) =>
+                    !(seenByUser[currentTinderUserId] || []).includes(u.id) &&
+                    !sessionMatches.some((m) => m.id === u.id)
+                )}
                 disabled={savingInteraction}
                 currentUserId={currentTinderUserId}
+                currentUser={usuarios.find(
+                  (u) => u.id === currentTinderUserId
+                )}
                 onSwipe={handleTinderSwipe}
-                onRewind={() => setRefreshTinder((n) => n + 1)}
-                onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
+                onRewind={() =>
+                  setRefreshTinder((n) => n + 1)
+                }
+                onOpenDetail={(u) =>
+                  setDetailModal({
+                    open: true,
+                    usuario: u,
+                  })
+                }
               />
             )}
 
@@ -493,61 +551,98 @@ export default function App() {
               <TinderMatches
                 matches={sessionMatches}
                 onBackToExplore={() => setCurrentUserTab('swipe')}
-                onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
+                onOpenDetail={(u) =>
+                  setDetailModal({
+                    open: true,
+                    usuario: u,
+                  })
+                }
                 onShowToast={showToast}
               />
             )}
           </div>
         )}
-      </main>
 
-      {/* =========================================================================
-          MODALES GLOBALES
-          ========================================================================= */}
-      <UsuarioModal
-        isOpen={usuarioModal.open}
-        usuario={usuarioModal.data}
-        ubicaciones={ubicaciones}
-        onClose={() => setUsuarioModal({ open: false, data: null })}
-        onSubmit={handleGuardarUsuario}
-      />
+        </main>
 
-      <HobbieModal
-        isOpen={hobbieModal.open}
-        hobbie={hobbieModal.data}
-        onClose={() => setHobbieModal({ open: false, data: null })}
-        onSubmit={handleGuardarHobbie}
-      />
+        {/* =========================================================================
+            MODALES GLOBALES
+            ========================================================================= */}
 
-      <UbicacionModal
-        isOpen={ubicacionModal.open}
-        ubicacion={ubicacionModal.data}
-        onClose={() => setUbicacionModal({ open: false, data: null })}
-        onSubmit={handleGuardarUbicacion}
-      />
+        <UsuarioModal
+          isOpen={usuarioModal.open}
+          usuario={usuarioModal.data}
+          ubicaciones={ubicaciones}
+          onClose={() =>
+            setUsuarioModal({
+              open: false,
+              data: null,
+            })
+          }
+          onSubmit={handleGuardarUsuario}
+        />
 
-      <DeleteConfirmModal
-        isOpen={deleteModal.open}
-        title={deleteModal.title}
-        message={deleteModal.message}
-        onClose={() => setDeleteModal({ open: false, onConfirm: null, title: '', message: '' })}
-        onConfirm={deleteModal.onConfirm}
-      />
+        <HobbieModal
+          isOpen={hobbieModal.open}
+          hobbie={hobbieModal.data}
+          onClose={() =>
+            setHobbieModal({
+              open: false,
+              data: null,
+            })
+          }
+          onSubmit={handleGuardarHobbie}
+        />
 
-      <UserDetailModal
-        isOpen={detailModal.open}
-        usuario={detailModal.usuario}
-        onClose={() => setDetailModal({ open: false, usuario: null })}
-      />
+        <UbicacionModal
+          isOpen={ubicacionModal.open}
+          ubicacion={ubicacionModal.data}
+          onClose={() =>
+            setUbicacionModal({
+              open: false,
+              data: null,
+            })
+          }
+          onSubmit={handleGuardarUbicacion}
+        />
 
-      <MatchCelebrationModal
-        isOpen={Boolean(celebrationData)}
-        currentUser={celebrationData?.currentUser}
-        matchedUser={celebrationData?.matchedUser}
-        commonHobbies={celebrationData?.commonHobbies}
-        onClose={() => setCelebrationData(null)}
-        onGoToMatches={() => setCurrentUserTab('matches')}
-      />
-    </div>
-  );
-}
+        <DeleteConfirmModal
+          isOpen={deleteModal.open}
+          title={deleteModal.title}
+          message={deleteModal.message}
+          onClose={() =>
+            setDeleteModal({
+              open: false,
+              onConfirm: null,
+              title: '',
+              message: '',
+            })
+          }
+          onConfirm={deleteModal.onConfirm}
+        />
+
+        <UserDetailModal
+          isOpen={detailModal.open}
+          usuario={detailModal.usuario}
+          onClose={() =>
+            setDetailModal({
+              open: false,
+              usuario: null,
+            })
+          }
+        />
+
+        <MatchCelebrationModal
+          isOpen={Boolean(celebrationData)}
+          currentUser={celebrationData?.currentUser}
+          matchedUser={celebrationData?.matchedUser}
+          commonHobbies={celebrationData?.commonHobbies}
+          onClose={() => setCelebrationData(null)}
+          onGoToMatches={() =>
+            setCurrentUserTab('matches')
+          }
+        />
+
+        </div>
+        );
+        }
