@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 export default function TinderDeck({
   usuarios,
+  candidatos,
+  disabled,
   currentUserId,
   onSwipe,
   onRewind,
   onOpenDetail,
 }) {
-  const [swipeAnimation, setSwipeAnimation] = useState(''); // 'left' | 'right' | 'up' | ''
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Perfiles a mostrar: todos los activos excepto el usuario logueado
-  const deckQueue = usuarios.filter((u) => u.id !== currentUserId && u.activo !== false);
-
+  const [pending, setPending] = useState(false);
+  const actionLock = useRef(false);
+  const deckQueue = candidatos;
   const currentUser = usuarios.find((u) => u.id === currentUserId);
-  const activeProfile = deckQueue[currentIndex];
+  const activeProfile = deckQueue[0];
 
-  const handleAction = (direction) => {
-    if (!activeProfile) return;
-    setSwipeAnimation(direction);
-
-    setTimeout(() => {
-      onSwipe(activeProfile, direction);
-      setCurrentIndex((prev) => prev + 1);
-      setSwipeAnimation('');
-    }, 280);
+  const handleAction = async (direction) => {
+    if (!activeProfile || disabled || actionLock.current) return;
+    actionLock.current = true;
+    setPending(true);
+    try {
+      await onSwipe(activeProfile, direction);
+    } finally {
+      actionLock.current = false;
+      setPending(false);
+    }
   };
-
-  const handleRewind = () => {
-    setCurrentIndex(0);
-    onRewind();
-  };
+  const handleRewind = () => { if (!pending && !disabled) onRewind(); };
 
   const calcularEdad = (fechaString) => {
     if (!fechaString) return '-';
@@ -69,7 +65,7 @@ export default function TinderDeck({
             <h4>No hay usuarios registrados</h4>
             <p>Crea perfiles en el panel de Admin para empezar a hacer match.</p>
           </div>
-        ) : currentIndex >= deckQueue.length ? (
+        ) : !activeProfile ? (
           <div className="tinder-empty-state">
             <div className="radar-wrap">
               <div className="radar-wave"></div>
@@ -78,16 +74,17 @@ export default function TinderDeck({
             <h4>¡Te pusiste al día!</h4>
             <p>No hay más perfiles nuevos para descubrir en este momento.</p>
             <button
+            disabled={pending || disabled}
               className="btn btn-primary btn-sm"
               onClick={handleRewind}
               style={{ marginTop: '1rem' }}
             >
-              🔄 Volver a explorar perfiles
+              🔄 Buscar nuevos perfiles
             </button>
           </div>
         ) : (
           <div
-            className={`tinder-card ${swipeAnimation ? `swipe-${swipeAnimation}` : ''}`}
+            className="tinder-card"
             key={activeProfile.id}
           >
             <div className="tinder-card-hero">
@@ -154,16 +151,18 @@ export default function TinderDeck({
       </div>
 
       {/* Botones de Acción */}
-      {currentIndex < deckQueue.length && (
+      {activeProfile && (
         <div className="tinder-controls">
           <button
+            disabled={pending || disabled}
             className="tinder-btn btn-rewind"
             onClick={handleRewind}
-            title="Rebobinar / Volver a empezar"
+            title="Buscar nuevos perfiles"
           >
             <span>🔄</span>
           </button>
           <button
+            disabled={pending || disabled}
             className="tinder-btn btn-dislike"
             onClick={() => handleAction('left')}
             title="Pasar (Dislike)"
@@ -171,20 +170,23 @@ export default function TinderDeck({
             <span>✕</span>
           </button>
           <button
+            disabled={pending || disabled}
             className="tinder-btn btn-superlike"
             onClick={() => handleAction('up')}
-            title="Super Like!"
+            title="Like (★)"
           >
             <span>★</span>
           </button>
           <button
+            disabled={pending || disabled}
             className="tinder-btn btn-like"
             onClick={() => handleAction('right')}
-            title="Like / Match!"
+            title="Like"
           >
             <span>💚</span>
           </button>
           <button
+            disabled={pending || disabled}
             className="tinder-btn btn-info"
             onClick={() => onOpenDetail(activeProfile)}
             title="Ver información completa"

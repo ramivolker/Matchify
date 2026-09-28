@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { api } from './services/api';
 
@@ -42,6 +42,45 @@ export default function App() {
   const [currentTinderUserId, setCurrentTinderUserId] = useState(null);
   const [sessionMatches, setSessionMatches] = useState([]);
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
+
+  const [candidatos, setCandidatos] = useState([]);
+  const [seenByUser, setSeenByUser] = useState({});
+  const [tinderLoading, setTinderLoading] = useState(false);
+  const [tinderError, setTinderError] = useState('');
+  const [refreshTinder, setRefreshTinder] = useState(0);
+  const [savingInteraction, setSavingInteraction] = useState(false);
+  const interactionLock = useRef(false);
+  const activeUserRef = useRef(currentTinderUserId);
+  activeUserRef.current = currentTinderUserId;
+
+  useEffect(() => {
+    let cancelled = false;
+    setCelebrationData(null);
+    setSessionMatches([]);
+    setCandidatos([]);
+    setTinderError('');
+    if (!currentTinderUserId || appMode !== 'user') return;
+    setTinderLoading(true);
+    Promise.allSettled([
+      api.getCandidatos(currentTinderUserId),
+      api.getMatches(currentTinderUserId),
+    ]).then(([candidateResult, matchResult]) => {
+      if (cancelled) return;
+      if (candidateResult.status === 'fulfilled') setCandidatos(candidateResult.value);
+      if (matchResult.status === 'fulfilled') {
+        setSessionMatches(matchResult.value.map((match) => {
+          const other = match.usuario1Id === currentTinderUserId ? match.usuario2 : match.usuario1;
+          return { ...usuarios.find((u) => u.id === other.id), ...other };
+        }));
+      }
+      const errors = [candidateResult, matchResult]
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason.message);
+      setTinderError(errors.join('. '));
+      setTinderLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [currentTinderUserId, appMode, currentUserTab, refreshTinder, usuarios]);
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -247,37 +286,35 @@ export default function App() {
   // =========================================================================
   // HANDLERS: TINDER SWIPING
   // =========================================================================
-  const handleTinderSwipe = (swipedUser, direction) => {
-    if (direction === 'right' || direction === 'up') {
-      const currentUser = usuarios.find((u) => u.id === currentTinderUserId);
-      const myHobbyIds =
-        currentUser && currentUser.hobbies
-          ? currentUser.hobbies.map((h) => (h.hobbie || h).id || h.hobbieId)
-          : [];
-
-      const userHobbies = swipedUser.hobbies ? swipedUser.hobbies.map((h) => h.hobbie || h) : [];
-      const commonHobbies = userHobbies.filter((h) => myHobbyIds.includes(h.id));
-
-      // Agregar a la lista de matches de la sesión
-      if (!sessionMatches.some((m) => m.id === swipedUser.id)) {
-        setSessionMatches((prev) => [
-          ...prev,
-          { ...swipedUser, commonHobbies, matchedAt: new Date() },
-        ]);
-      }
-
-      // Disparar celebración de match si tienen hobbies en común o es superlike o probabilidad alta
-      if (direction === 'up' || commonHobbies.length > 0 || Math.random() > 0.3) {
-        setCelebrationData({
-          currentUser,
-          matchedUser: swipedUser,
-          commonHobbies,
-        });
+  const handleTinderSwipe = async (swipedUser, direction) => {
+    if (!currentTinderUserId || interactionLock.current) return false;
+    const usuarioId = currentTinderUserId;
+    const tipo = direction === 'left' ? 'DISLIKE' : 'LIKE';
+    interactionLock.current = true;
+    setSavingInteraction(true);
+    try {
+      const result = await api.crearInteraccion(usuarioId, swipedUser.id, tipo);
+      setSeenByUser((prev) => ({
+        ...prev, [usuarioId]: [...(prev[usuarioId] || []), swipedUser.id],
+      }));
+      if (activeUserRef.current !== usuarioId) return true;
+      if (tipo === 'LIKE' && result.match != null) {
+        const currentUser = usuarios.find((u) => u.id === usuarioId);
+        const myHobbyIds = (currentUser?.hobbies || []).map((h) => (h.hobbie || h).id || h.hobbieId);
+        const commonHobbies = (swipedUser.hobbies || []).map((h) => h.hobbie || h)
+          .filter((h) => myHobbyIds.includes(h.id));
+        setSessionMatches((prev) => prev.some((u) => u.id === swipedUser.id) ? prev : [...prev, swipedUser]);
+        setCelebrationData({ currentUser, matchedUser: swipedUser, commonHobbies });
       } else {
-        showToast(`Le diste like a ${swipedUser.nombre} 👍`, 'success');
+        showToast(tipo === 'LIKE' ? `Le diste like a ${swipedUser.nombre} 👍` : `Pasaste el perfil de ${swipedUser.nombre}`, 'success');
       }
-    } else {
-      showToast(`Pasaste el perfil de ${swipedUser.nombre}`, 'info');
+      return true;
+    } catch (err) {
+      if (activeUserRef.current === usuarioId) showToast(err.message, 'error');
+      return false;
+    } finally {
+      interactionLock.current = false;
+      setSavingInteraction(false);
     }
   };
 
@@ -415,6 +452,7 @@ export default function App() {
                 <span className="tinder-id-label">Navegando como:</span>
                 <select
                   className="form-control tinder-select-user"
+                  disabled={savingInteraction}
                   value={currentTinderUserId || ''}
                   onChange={(e) => setCurrentTinderUserId(parseInt(e.target.value, 10))}
                 >
@@ -435,18 +473,23 @@ export default function App() {
             </div>
 
             {/* Vista de Deslizar Perfiles (Swipe Deck) */}
-            {currentUserTab === 'swipe' && (
+            {tinderError && <div role="alert">{tinderError} <button className="btn btn-secondary btn-sm" onClick={() => setRefreshTinder((n) => n + 1)}>Reintentar</button></div>}
+            {tinderLoading && <p role="status">Cargando candidatos y matches…</p>}
+            {currentUserTab === 'swipe' && !tinderLoading && (
               <TinderDeck
+                key={currentTinderUserId}
                 usuarios={usuarios}
+                candidatos={candidatos.filter((u) => !(seenByUser[currentTinderUserId] || []).includes(u.id) && !sessionMatches.some((m) => m.id === u.id))}
+                disabled={savingInteraction}
                 currentUserId={currentTinderUserId}
                 onSwipe={handleTinderSwipe}
-                onRewind={() => showToast('Baraja reiniciada 🔄', 'info')}
+                onRewind={() => setRefreshTinder((n) => n + 1)}
                 onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
               />
             )}
 
             {/* Vista de Matches */}
-            {currentUserTab === 'matches' && (
+            {currentUserTab === 'matches' && !tinderLoading && (
               <TinderMatches
                 matches={sessionMatches}
                 onBackToExplore={() => setCurrentUserTab('swipe')}

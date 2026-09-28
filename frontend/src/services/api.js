@@ -2,6 +2,31 @@
 const API_BASE = '/api';
 
 export const api = {
+  async getCandidatos(usuarioId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/candidatos`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Error al obtener candidatos');
+    return data;
+  },
+
+  async getMatches(usuarioId) {
+    const res = await fetch(`${API_BASE}/matches/${usuarioId}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Error al obtener matches');
+    return data;
+  },
+
+  async crearInteraccion(usuarioEmisorId, usuarioDestinatarioId, tipo) {
+    const res = await fetch(`${API_BASE}/interacciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuarioEmisorId, usuarioDestinatarioId, tipo }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Error al guardar interacción');
+    return data;
+  },
+
   // Health
   async getHealth() {
     const res = await fetch(`${API_BASE}/health`);
