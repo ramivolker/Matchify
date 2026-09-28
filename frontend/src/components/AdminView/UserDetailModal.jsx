@@ -3,7 +3,7 @@ import React from 'react';
 export default function UserDetailModal({ isOpen, onClose, usuario }) {
   if (!isOpen || !usuario) return null;
 
-  const iniciales = `${usuario.nombre.charAt(0)}${usuario.apellido.charAt(0)}`.toUpperCase();
+  const iniciales = `${usuario.nombre?.charAt(0) || 'U'}${usuario.apellido?.charAt(0) || ''}`.toUpperCase();
 
   const calcularEdad = (fechaString) => {
     if (!fechaString) return '-';

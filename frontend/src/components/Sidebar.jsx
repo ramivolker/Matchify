@@ -1,8 +1,8 @@
 import React from 'react';
 
 export default function Sidebar({
-  appMode,
-  setAppMode,
+  session,
+  onLogout,
   currentAdminTab,
   setCurrentAdminTab,
   currentUserTab,
@@ -12,7 +12,12 @@ export default function Sidebar({
   checkHealth,
   isOpen,
   onClose,
+  darkMode,
+  onToggleDarkMode,
 }) {
+  const isAdmin = session?.role === 'admin';
+  const currentUser = session?.user;
+
   return (
     <>
       {/* Backdrop para cerrar en móvil */}
@@ -25,10 +30,12 @@ export default function Sidebar({
         {/* Marca y Botón de cierre en móvil */}
         <div className="brand sidebar-brand">
           <div className="brand-info">
-            <div className="logo-icon">🔥</div>
+            <div className="logo-icon">{isAdmin ? '🛡️' : '🔥'}</div>
             <div className="brand-text">
               <h1>Matchify</h1>
-              <span className="badge-dev">{appMode === 'admin' ? 'Admin' : 'Usuario'}</span>
+              <span className={`badge-dev ${isAdmin ? 'badge-admin' : ''}`}>
+                {isAdmin ? 'Administrador' : 'Usuario'}
+              </span>
             </div>
           </div>
           <button className="btn-close-sidebar" onClick={onClose} aria-label="Cerrar menú">
@@ -36,33 +43,25 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Selector de Modo: Admin vs Tinder */}
-        <div className="mode-switcher-card">
-          <span className="mode-switcher-title">Modo de Vista:</span>
-          <div className="segmented-control">
-            <button
-              className={`seg-btn ${appMode === 'admin' ? 'active' : ''}`}
-              onClick={() => {
-                setAppMode('admin');
-                onClose();
-              }}
-            >
-              <span>🛡️</span> Admin
-            </button>
-            <button
-              className={`seg-btn ${appMode === 'user' ? 'active' : ''}`}
-              onClick={() => {
-                setAppMode('user');
-                onClose();
-              }}
-            >
-              <span>🔥</span> Tinder
-            </button>
+        {/* Tarjeta de Usuario Activo en Sesión */}
+        <div className="sidebar-user-card">
+          <div className="sidebar-user-avatar">
+            {isAdmin
+              ? '👑'
+              : `${currentUser?.nombre?.charAt(0) || 'U'}${currentUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
+          </div>
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-name">
+              {isAdmin ? 'Administrador' : `${currentUser?.nombre} ${currentUser?.apellido}`}
+            </span>
+            <span className="sidebar-user-email">
+              {isAdmin ? session.email : currentUser?.email}
+            </span>
           </div>
         </div>
 
         {/* Menú de Navegación ADMIN */}
-        {appMode === 'admin' && (
+        {isAdmin && (
           <nav className="nav-menu">
             <div className="nav-section-title">ADMINISTRACIÓN</div>
             <button
@@ -111,8 +110,8 @@ export default function Sidebar({
           </nav>
         )}
 
-        {/* Menú de Navegación TINDER USER */}
-        {appMode === 'user' && (
+        {/* Menú de Navegación USUARIO NORMAL */}
+        {!isAdmin && (
           <nav className="nav-menu">
             <div className="nav-section-title">DESCUBRIR</div>
             <button
@@ -136,17 +135,43 @@ export default function Sidebar({
               <span className="nav-label">Mis Matches</span>
               <span className="counter-badge badge-match">{stats.matchesCount}</span>
             </button>
+            <button
+              className={`nav-item ${currentUserTab === 'perfil' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentUserTab('perfil');
+                onClose();
+              }}
+            >
+              <span className="nav-icon">👤</span>
+              <span className="nav-label">Mi Perfil</span>
+            </button>
           </nav>
         )}
 
-        {/* Footer con Estado de la API */}
+        {/* Footer con Estado de la API, Tema y Cerrar Sesión */}
         <div className="sidebar-footer">
-          <div className="api-status">
-            <span className={`status-dot ${isApiOnline ? 'online' : 'offline'}`} />
-            <span className="status-text">{isApiOnline ? 'API Conectada' : 'API Desconectada'}</span>
+          <div className="sidebar-footer-controls">
+            <div className="api-status">
+              <span className={`status-dot ${isApiOnline ? 'online' : 'offline'}`} />
+              <span className="status-text">{isApiOnline ? 'API Conectada' : 'API Desconectada'}</span>
+            </div>
+
+            <button
+              type="button"
+              className="btn-sm btn-ghost btn-theme-toggle"
+              onClick={onToggleDarkMode}
+              title={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              <span>{darkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro'}</span>
+            </button>
           </div>
-          <button className="btn-sm btn-ghost" onClick={checkHealth} title="Verificar API">
-            <span>↻</span> Probar API
+
+          <button
+            className="btn-sm btn-ghost btn-logout"
+            onClick={onLogout}
+            title="Cerrar Sesión"
+          >
+            <span>🚪</span> Cerrar Sesión
           </button>
         </div>
       </aside>

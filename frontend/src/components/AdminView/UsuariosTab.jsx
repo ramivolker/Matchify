@@ -136,7 +136,7 @@ export default function UsuariosTab({
             ) : (
               usuariosFiltrados.map((u) => {
                 const hobbiesCount = u.hobbies ? u.hobbies.length : 0;
-                const iniciales = `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
+                const iniciales = `${u.nombre?.charAt(0) || 'U'}${u.apellido?.charAt(0) || ''}`.toUpperCase();
                 const ubicacionTexto = u.ubicacion
                   ? `${u.ubicacion.ciudad}, ${u.ubicacion.provincia}`
                   : 'Sin asignar';

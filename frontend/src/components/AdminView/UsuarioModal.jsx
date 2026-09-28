@@ -45,9 +45,9 @@ export default function UsuarioModal({
       nombre: nombre.trim(),
       apellido: apellido.trim(),
       email: email.trim(),
-      fechaNacimiento,
+      fechaNacimiento: fechaNacimiento || '2000-01-01',
       biografia: biografia.trim() || undefined,
-      activo,
+      activo: Boolean(activo),
       ubicacionId: ubicacionId ? parseInt(ubicacionId, 10) : null,
     };
     onSubmit(data);

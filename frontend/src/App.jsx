@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { api } from './services/api';
 
-// Componentes
+// Auth Screen
+import AuthView from './components/AuthView';
+
+// Navigation & Global UI
 import Sidebar from './components/Sidebar';
 import NavbarMobile from './components/NavbarMobile';
+import BottomNav from './components/BottomNav';
 import Toast from './components/Toast';
+import ReportModal from './components/ReportModal';
 
 // Admin Components & Modals
 import StatsGrid from './components/AdminView/StatsGrid';
@@ -19,16 +24,45 @@ import UbicacionModal from './components/AdminView/UbicacionModal';
 import DeleteConfirmModal from './components/AdminView/DeleteConfirmModal';
 import UserDetailModal from './components/AdminView/UserDetailModal';
 
-// Tinder Components
+// Tinder & User Profile Components
 import TinderDeck from './components/TinderView/TinderDeck';
 import TinderMatches from './components/TinderView/TinderMatches';
+import MiPerfilTab from './components/TinderView/MiPerfilTab';
 import MatchCelebrationModal from './components/TinderView/MatchCelebrationModal';
 
 export default function App() {
-  // Navigation & Mode
-  const [appMode, setAppMode] = useState('admin'); // 'admin' | 'user'
+  // Theme state (Dark Mode support)
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('matchify_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('matchify_theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('matchify_theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
+  };
+
+  // Auth & Session State
+  const [session, setSession] = useState(() => {
+    try {
+      const saved = localStorage.getItem('matchify_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Navigation Tabs
   const [currentAdminTab, setCurrentAdminTab] = useState('usuarios');
-  const [currentUserTab, setCurrentUserTab] = useState('swipe');
+  const [currentUserTab, setCurrentUserTab] = useState('swipe'); // 'swipe' | 'matches' | 'perfil'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Data States
@@ -40,11 +74,10 @@ export default function App() {
 
   // Tinder Session State
   const [currentTinderUserId, setCurrentTinderUserId] = useState(null);
-  const [candidatosState, setCandidatosState] = useState({
-    usuarioId: null, datos: [], loading: false, error: '',
-  });
   const [sessionMatches, setSessionMatches] = useState([]);
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
+  const [activeChatUser, setActiveChatUser] = useState(null);
+  const [blockedUserIds, setBlockedUserIds] = useState([]);
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -55,32 +88,13 @@ export default function App() {
   const [ubicacionModal, setUbicacionModal] = useState({ open: false, data: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, onConfirm: null, title: '', message: '' });
   const [detailModal, setDetailModal] = useState({ open: false, usuario: null });
+  const [reportModal, setReportModal] = useState({ open: false, user: null });
 
   // 1. Cargar datos al iniciar
   useEffect(() => {
     checkHealth();
     cargarTodo();
   }, []);
-
-  useEffect(() => {
-    if (appMode !== 'user' || !currentTinderUserId) return;
-    let vigente = true;
-    setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: true, error: '' });
-
-    api.getCandidatos(currentTinderUserId)
-      .then((datos) => {
-        if (vigente) {
-          setCandidatosState({ usuarioId: currentTinderUserId, datos, loading: false, error: '' });
-        }
-      })
-      .catch((error) => {
-        if (vigente) {
-          setCandidatosState({ usuarioId: currentTinderUserId, datos: [], loading: false, error: error.message });
-        }
-      });
-
-    return () => { vigente = false; };
-  }, [currentTinderUserId, appMode]);
 
   // Keyboard accessibility: ESC cierra cualquier modal abierto
   useEffect(() => {
@@ -101,6 +115,7 @@ export default function App() {
     setDeleteModal({ open: false, onConfirm: null, title: '', message: '' });
     setDetailModal({ open: false, usuario: null });
     setCelebrationData(null);
+    setReportModal({ open: false, user: null });
   };
 
   const showToast = (message, type = 'info') => {
@@ -124,21 +139,84 @@ export default function App() {
     setLoading(true);
     try {
       const [ubics, hobs, usrs] = await Promise.all([
-        api.getUbicaciones(),
-        api.getHobbies(),
-        api.getUsuarios(),
+        api.getUbicaciones().catch(() => []),
+        api.getHobbies().catch(() => []),
+        api.getUsuarios().catch(() => []),
       ]);
-      setUbicaciones(ubics);
-      setHobbies(hobs);
-      setUsuarios(usrs);
-
-      if (usrs.length > 0 && !currentTinderUserId) {
-        setCurrentTinderUserId(usrs[0].id);
-      }
+      setUbicaciones(ubics || []);
+      setHobbies(hobs || []);
+      setUsuarios(usrs || []);
     } catch (err) {
-      showToast(err.message, 'error');
+      console.warn('Error al cargar datos:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSeedData = async () => {
+    setLoading(true);
+    showToast('Generando datos de prueba en la base de datos...', 'info');
+    try {
+      await api.seedInitialData();
+      await cargarTodo();
+      showToast('¡Datos de prueba cargados con éxito! 🎉', 'success');
+    } catch (err) {
+      showToast(err.message || 'Error al cargar datos demo', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================================================================
+  // AUTH HANDLERS
+  // =========================================================================
+  const handleLogin = (sessionData) => {
+    const isAdm = sessionData?.role === 'admin';
+    const safeSession = {
+      role: isAdm ? 'admin' : 'user',
+      nombre: sessionData?.nombre || sessionData?.user?.nombre || 'Administrador',
+      apellido: sessionData?.apellido || sessionData?.user?.apellido || 'Matchify',
+      email: sessionData?.email || sessionData?.user?.email || (isAdm ? 'admin@matchify.com' : 'usuario@matchify.com'),
+      user: sessionData?.user || {
+        id: 0,
+        nombre: sessionData?.nombre || 'Administrador',
+        apellido: sessionData?.apellido || 'Matchify',
+        email: sessionData?.email || 'admin@matchify.com',
+        activo: true,
+      },
+    };
+
+    setSession(safeSession);
+    localStorage.setItem('matchify_session', JSON.stringify(safeSession));
+    showToast(
+      `¡Bienvenido/a, ${safeSession.role === 'admin' ? 'Administrador' : safeSession.user?.nombre || 'Usuario'}!`,
+      'success'
+    );
+  };
+
+  const handleLogout = () => {
+    setSession(null);
+    localStorage.removeItem('matchify_session');
+    setSessionMatches([]);
+    setActiveChatUser(null);
+    showToast('Sesión finalizada', 'info');
+  };
+
+  const handleRegisterUser = async (formData) => {
+    const nuevo = await api.crearUsuario(formData);
+    await cargarTodo();
+    return nuevo;
+  };
+
+  // Safety report handler
+  const handleSubmitReport = ({ userId, userName, reason, blocked }) => {
+    if (blocked) {
+      setBlockedUserIds((prev) => [...prev, userId]);
+      setSessionMatches((prev) => prev.filter((m) => m.id !== userId));
+      if (activeChatUser?.id === userId) setActiveChatUser(null);
+      showToast(`Has reportado y bloqueado a ${userName}`, 'info');
+    } else {
+      showToast(`Reporte enviado para ${userName}`, 'info');
     }
   };
 
@@ -155,16 +233,14 @@ export default function App() {
   };
 
   // =========================================================================
-  // HANDLERS: USUARIOS CRUD
+  // HANDLERS: USUARIOS CRUD (ADMIN)
   // =========================================================================
   const handleGuardarUsuario = async (formData) => {
     try {
       if (usuarioModal.data) {
-        // Actualizar
         await api.actualizarUsuario(usuarioModal.data.id, formData);
         showToast(`Usuario "${formData.nombre}" actualizado con éxito`, 'success');
       } else {
-        // Crear
         await api.crearUsuario(formData);
         showToast(`Usuario "${formData.nombre}" creado con éxito`, 'success');
       }
@@ -194,7 +270,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // HANDLERS: HOBBIES CRUD
+  // HANDLERS: HOBBIES CRUD (ADMIN)
   // =========================================================================
   const handleGuardarHobbie = async (formData) => {
     try {
@@ -231,7 +307,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // HANDLERS: UBICACIONES CRUD
+  // HANDLERS: UBICACIONES CRUD (ADMIN)
   // =========================================================================
   const handleGuardarUbicacion = async (formData) => {
     try {
@@ -268,11 +344,11 @@ export default function App() {
   };
 
   // =========================================================================
-  // HANDLERS: TINDER SWIPING
+  // HANDLERS: TINDER SWIPING (NORMAL USER)
   // =========================================================================
   const handleTinderSwipe = (swipedUser, direction) => {
     if (direction === 'right' || direction === 'up') {
-      const currentUser = usuarios.find((u) => u.id === currentTinderUserId);
+      const currentUser = session?.user;
       const myHobbyIds =
         currentUser && currentUser.hobbies
           ? currentUser.hobbies.map((h) => (h.hobbie || h).id || h.hobbieId)
@@ -289,7 +365,7 @@ export default function App() {
         ]);
       }
 
-      // Disparar celebración de match si tienen hobbies en común o es superlike o probabilidad alta
+      // Celebración de match
       if (direction === 'up' || commonHobbies.length > 0 || Math.random() > 0.3) {
         setCelebrationData({
           currentUser,
@@ -304,7 +380,12 @@ export default function App() {
     }
   };
 
-  // Header Title Helper
+  const handleOpenChatFromMatch = (matchedUser) => {
+    setActiveChatUser(matchedUser);
+    setCurrentUserTab('matches');
+  };
+
+  // Dynamic Header Title
   const getHeaderTitle = () => {
     if (currentAdminTab === 'usuarios') return 'Gestión de Usuarios';
     if (currentAdminTab === 'hobbies') return 'Catálogo de Hobbies';
@@ -326,6 +407,27 @@ export default function App() {
     if (currentAdminTab === 'ubicaciones') setUbicacionModal({ open: true, data: null });
   };
 
+  // =========================================================================
+  // SI NO HAY SESIÓN: MOSTRAR PANTALLA DE LOGIN / REGISTRO
+  // =========================================================================
+  if (!session) {
+    return (
+      <div className="auth-root-layout">
+        <Toast toasts={toasts} />
+        <AuthView
+          usuarios={usuarios}
+          ubicaciones={ubicaciones}
+          onLogin={handleLogin}
+          onRegister={handleRegisterUser}
+          onShowToast={showToast}
+        />
+      </div>
+    );
+  }
+
+  const isAdmin = session.role === 'admin';
+  const currentLoggedInUser = session.user;
+
   return (
     <div className="app-container">
       {/* Toast Notifications */}
@@ -333,15 +435,17 @@ export default function App() {
 
       {/* Top Navbar para móviles */}
       <NavbarMobile
-        appMode={appMode}
-        setAppMode={setAppMode}
+        session={session}
+        onLogout={handleLogout}
         onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
-      {/* Sidebar Lateral */}
+      {/* Sidebar Lateral con Navegación según Rol */}
       <Sidebar
-        appMode={appMode}
-        setAppMode={setAppMode}
+        session={session}
+        onLogout={handleLogout}
         currentAdminTab={currentAdminTab}
         setCurrentAdminTab={setCurrentAdminTab}
         currentUserTab={currentUserTab}
@@ -351,31 +455,41 @@ export default function App() {
         checkHealth={checkHealth}
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       {/* Contenido Principal */}
       <main className="main-content">
         {/* =========================================================================
-            VISTA 1: ADMIN DASHBOARD
+            VISTA 1: EXCLUSIVA PARA ADMINISTRADOR
             ========================================================================= */}
-        {appMode === 'admin' && (
+        {isAdmin && (
           <div className="app-view-container">
             {/* Header del Admin */}
             <header className="top-header">
               <div className="header-info">
                 <h2>{getHeaderTitle()}</h2>
-                <p>Prueba los endpoints CRUD de la API en tiempo real con React.</p>
+                <p>Panel de control y gestión global de la base de datos de Matchify.</p>
               </div>
-              {getPrimaryActionText() && (
-                <div className="header-actions">
+              <div className="header-actions" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary shadow-sm"
+                  onClick={handleSeedData}
+                  title="Poblar base de datos con datos de prueba iniciales"
+                >
+                  🌱 Cargar Datos Demo
+                </button>
+                {getPrimaryActionText() && (
                   <button
                     className="btn btn-primary shadow-sm"
                     onClick={handlePrimaryActionClick}
                   >
                     {getPrimaryActionText()}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </header>
 
             {/* KPI Stats Cards */}
@@ -428,9 +542,9 @@ export default function App() {
         )}
 
         {/* =========================================================================
-            VISTA 2: TINDER USER EXPERIENCE
+            VISTA 2: EXCLUSIVA PARA USUARIO CON PERFIL NORMAL
             ========================================================================= */}
-        {appMode === 'user' && (
+        {!isAdmin && (
           <div className="app-view-container">
             {/* Top Bar Tinder: Selector de usuario activo */}
             <div className="tinder-top-bar">
@@ -458,29 +572,38 @@ export default function App() {
             </div>
 
             {/* Vista de Deslizar Perfiles (Swipe Deck) */}
-            {currentUserTab === 'swipe' && (!currentTinderUserId ? (
-              <div className="tinder-empty-state" role="status">Seleccioná un usuario para explorar candidatos.</div>
-            ) : candidatosState.usuarioId !== currentTinderUserId || candidatosState.loading ? (
-              <div className="tinder-empty-state" role="status">Cargando candidatos...</div>
-            ) : candidatosState.error ? (
-              <div className="tinder-empty-state" role="alert">{candidatosState.error}</div>
-            ) : (
+            {currentUserTab === 'swipe' && (
               <TinderDeck
-                key={currentTinderUserId}
-                candidatos={candidatosState.datos}
-                currentUser={usuarios.find((u) => u.id === currentTinderUserId)}
+                usuarios={usuarios}
+                currentUserId={currentTinderUserId}
                 onSwipe={handleTinderSwipe}
                 onRewind={() => showToast('Baraja reiniciada 🔄', 'info')}
                 onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
+                onOpenReport={(u) => setReportModal({ open: true, user: u })}
+                blockedUserIds={blockedUserIds}
               />
-            ))}
+            )}
 
-            {/* Vista de Matches */}
+            {/* Pestaña: Mis Matches & Chat Split View */}
             {currentUserTab === 'matches' && (
               <TinderMatches
                 matches={sessionMatches}
                 onBackToExplore={() => setCurrentUserTab('swipe')}
                 onOpenDetail={(u) => setDetailModal({ open: true, usuario: u })}
+                onOpenReport={(u) => setReportModal({ open: true, user: u })}
+                onShowToast={showToast}
+                activeChatUser={activeChatUser}
+                onSelectChatUser={(u) => setActiveChatUser(u)}
+              />
+            )}
+
+            {/* Pestaña: Mi Perfil y Hobbies */}
+            {currentUserTab === 'perfil' && (
+              <MiPerfilTab
+                currentUser={currentLoggedInUser}
+                ubicaciones={ubicaciones}
+                hobbies={hobbies}
+                onProfileUpdated={cargarTodo}
                 onShowToast={showToast}
               />
             )}
@@ -489,37 +612,54 @@ export default function App() {
       </main>
 
       {/* =========================================================================
+          BOTTOM NAVIGATION BAR (MÓVIL - USUARIO NORMAL)
+          ========================================================================= */}
+      {!isAdmin && (
+        <BottomNav
+          currentUserTab={currentUserTab}
+          setCurrentUserTab={setCurrentUserTab}
+          matchesCount={sessionMatches.length}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+        />
+      )}
+
+      {/* =========================================================================
           MODALES GLOBALES
           ========================================================================= */}
-      <UsuarioModal
-        isOpen={usuarioModal.open}
-        usuario={usuarioModal.data}
-        ubicaciones={ubicaciones}
-        onClose={() => setUsuarioModal({ open: false, data: null })}
-        onSubmit={handleGuardarUsuario}
-      />
+      {isAdmin && (
+        <>
+          <UsuarioModal
+            isOpen={usuarioModal.open}
+            usuario={usuarioModal.data}
+            ubicaciones={ubicaciones}
+            onClose={() => setUsuarioModal({ open: false, data: null })}
+            onSubmit={handleGuardarUsuario}
+          />
 
-      <HobbieModal
-        isOpen={hobbieModal.open}
-        hobbie={hobbieModal.data}
-        onClose={() => setHobbieModal({ open: false, data: null })}
-        onSubmit={handleGuardarHobbie}
-      />
+          <HobbieModal
+            isOpen={hobbieModal.open}
+            hobbie={hobbieModal.data}
+            onClose={() => setHobbieModal({ open: false, data: null })}
+            onSubmit={handleGuardarHobbie}
+          />
 
-      <UbicacionModal
-        isOpen={ubicacionModal.open}
-        ubicacion={ubicacionModal.data}
-        onClose={() => setUbicacionModal({ open: false, data: null })}
-        onSubmit={handleGuardarUbicacion}
-      />
+          <UbicacionModal
+            isOpen={ubicacionModal.open}
+            ubicacion={ubicacionModal.data}
+            onClose={() => setUbicacionModal({ open: false, data: null })}
+            onSubmit={handleGuardarUbicacion}
+          />
 
-      <DeleteConfirmModal
-        isOpen={deleteModal.open}
-        title={deleteModal.title}
-        message={deleteModal.message}
-        onClose={() => setDeleteModal({ open: false, onConfirm: null, title: '', message: '' })}
-        onConfirm={deleteModal.onConfirm}
-      />
+          <DeleteConfirmModal
+            isOpen={deleteModal.open}
+            title={deleteModal.title}
+            message={deleteModal.message}
+            onClose={() => setDeleteModal({ open: false, onConfirm: null, title: '', message: '' })}
+            onConfirm={deleteModal.onConfirm}
+          />
+        </>
+      )}
 
       <UserDetailModal
         isOpen={detailModal.open}
@@ -533,7 +673,14 @@ export default function App() {
         matchedUser={celebrationData?.matchedUser}
         commonHobbies={celebrationData?.commonHobbies}
         onClose={() => setCelebrationData(null)}
-        onGoToMatches={() => setCurrentUserTab('matches')}
+        onOpenChatWithUser={handleOpenChatFromMatch}
+      />
+
+      <ReportModal
+        isOpen={reportModal.open}
+        userToReport={reportModal.user}
+        onClose={() => setReportModal({ open: false, user: null })}
+        onSubmitReport={handleSubmitReport}
       />
     </div>
   );
