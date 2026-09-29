@@ -60,10 +60,6 @@ export default function MiPerfilTab({
   const [biografia, setBiografia] = useState(currentUser?.biografia || '');
   const [ubicacionId, setUbicacionId] = useState(currentUser?.ubicacionId || '');
 
-  // Privacy toggles
-  const [incognitoMode, setIncognitoMode] = useState(false);
-  const [hideDistance, setHideDistance] = useState(false);
-
   // Assigned hobbies with local optimistic state
   const extractHobbyIds = (user) => {
     return (
@@ -356,64 +352,16 @@ export default function MiPerfilTab({
           </div>
         )}
 
-        {/* SECCIÓN DE PRIVACIDAD Y SEGURIDAD */}
         {currentUser?.id && (
           <PreferenciasSection key={currentUser.id} usuarioId={currentUser.id}
             onSaved={onPreferencesUpdated} onShowToast={onShowToast} />
         )}
 
-        <div className="profile-privacy-section">
-          <h3 className="section-title">🔒 Privacidad y Control de Perfil</h3>
-          <div className="privacy-toggles-grid">
-            <label className="toggle-control privacy-card-item">
-              <input
-                type="checkbox"
-                checked={incognitoMode}
-                onChange={(e) => {
-                  setIncognitoMode(e.target.checked);
-                  onShowToast(
-                    e.target.checked
-                      ? 'Modo incógnito activado: tu perfil no aparecerá en la baraja'
-                      : 'Modo incógnito desactivado: tu perfil está visible',
-                    'info'
-                  );
-                }}
-              />
-              <span className="toggle-switch"></span>
-              <div>
-                <span className="toggle-label">Modo Incógnito</span>
-                <p className="toggle-sub">Pausa la visibilidad de tu cuenta sin perder tus chats ni matches existentes.</p>
-              </div>
-            </label>
-
-            <label className="toggle-control privacy-card-item">
-              <input
-                type="checkbox"
-                checked={hideDistance}
-                onChange={(e) => {
-                  setHideDistance(e.target.checked);
-                  onShowToast(
-                    e.target.checked
-                      ? 'Ubicación exacta oculta para otros usuarios'
-                      : 'Ubicación visible normalmente',
-                    'info'
-                  );
-                }}
-              />
-              <span className="toggle-switch"></span>
-              <div>
-                <span className="toggle-label">Ocultar distancia exacta</span>
-                <p className="toggle-sub">Solo muestra tu ciudad aproximada para mayor privacidad.</p>
-              </div>
-            </label>
-          </div>
-        </div>
-
         {/* SECCIÓN DE HOBBIES DEL USUARIO */}
         <div className="profile-hobbies-section">
           <div className="section-header-flex">
             <div>
-              <h3 className="section-title">🎨 Tus Hobbies y Pasiones</h3>
+              <h3 className="section-title">🎨 Tus hobbies</h3>
               <p className="section-subtitle">
                 Haz clic sobre un hobbie para activarlo o quitarlo de tu perfil en tiempo real.
               </p>

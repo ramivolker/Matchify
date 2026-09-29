@@ -3396,46 +3396,6 @@ body {
 }
 
 /* ==========================================================================
-   PRIVACY CONTROLS
-   ========================================================================== */
-
-.profile-privacy-section {
-  padding-top: 1.75rem;
-  border-top: 1px solid var(--border);
-  margin-bottom: 1.75rem;
-}
-
-.privacy-toggles-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 0.85rem;
-}
-
-@media (max-width: 767px) {
-  .privacy-toggles-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.privacy-card-item {
-  background: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.toggle-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-  font-weight: 400;
-}
-
-/* ==========================================================================
    CONVERSATION STARTERS (MATCH CELEBRATION)
    ========================================================================== */
 
