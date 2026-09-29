@@ -162,7 +162,7 @@ export const api = {
   async crearHobbie(data) {
     const payload = {
       nombre: String(data.nombre || '').trim(),
-      descripcion: data.descripcion ? String(data.descripcion).trim() : null,
+      emoji: data.emoji ? String(data.emoji).trim() : null,
     };
     const res = await fetch(`${API_BASE}/hobbies`, {
       method: 'POST',
@@ -177,7 +177,7 @@ export const api = {
   async actualizarHobbie(id, data) {
     const payload = {
       nombre: String(data.nombre || '').trim(),
-      descripcion: data.descripcion ? String(data.descripcion).trim() : null,
+      emoji: data.emoji ? String(data.emoji).trim() : null,
     };
     const res = await fetch(`${API_BASE}/hobbies/${id}`, {
       method: 'PUT',
@@ -277,67 +277,5 @@ export const api = {
       throw new Error(json.message || json.error || 'Error al desasociar hobbie');
     }
     return true;
-  },
-
-  // Carga de datos de prueba iniciales (Seeds) para evaluación rápida
-  async seedInitialData() {
-    try {
-      // 1. Ubicaciones iniciales
-      const u1 = await this.crearUbicacion({ ciudad: 'Rosario', provincia: 'Santa Fe', pais: 'Argentina', latitud: -32.9468, longitud: -60.6393 }).catch(() => null);
-      const u2 = await this.crearUbicacion({ ciudad: 'Córdoba', provincia: 'Córdoba', pais: 'Argentina', latitud: -31.4201, longitud: -64.1888 }).catch(() => null);
-      const u3 = await this.crearUbicacion({ ciudad: 'Buenos Aires', provincia: 'CABA', pais: 'Argentina', latitud: -34.6037, longitud: -58.3816 }).catch(() => null);
-
-      // 2. Hobbies iniciales
-      const h1 = await this.crearHobbie({ nombre: 'Fotografía', descripcion: 'Capturar momentos y retratos urbanos' }).catch(() => null);
-      const h2 = await this.crearHobbie({ nombre: 'Fútbol', descripcion: 'Partidos con amigos y torneos' }).catch(() => null);
-      const h3 = await this.crearHobbie({ nombre: 'Música en vivo', descripcion: 'Conciertos, festivales y tocar instrumentos' }).catch(() => null);
-      const h4 = await this.crearHobbie({ nombre: 'Gastronomía & Café', descripcion: 'Cocinar recetas y descubrir cafeterías' }).catch(() => null);
-      const h5 = await this.crearHobbie({ nombre: 'Videojuegos', descripcion: 'Gaming, consolas y partidas cooperativas' }).catch(() => null);
-
-      const ubicacionId = u1?.id || 1;
-
-      // 3. Usuarios de prueba
-      const usr1 = await this.crearUsuario({
-        nombre: 'Sofía',
-        apellido: 'Martínez',
-        email: 'sofia@matchify.com',
-        fechaNacimiento: '1998-05-14',
-        biografia: 'Diseñadora gráfica. Me encanta sacar fotos analógicas y los fines de semana ir a recitales.',
-        ubicacionId,
-        activo: true,
-      }).catch(() => null);
-
-      const usr2 = await this.crearUsuario({
-        nombre: 'Mateo',
-        apellido: 'González',
-        email: 'mateo@matchify.com',
-        fechaNacimiento: '1996-11-22',
-        biografia: 'Ingeniero y aficionado a la cocina. Siempre listo para un partidito de fútbol o probar un nuevo café.',
-        ubicacionId: u2?.id || ubicacionId,
-        activo: true,
-      }).catch(() => null);
-
-      const usr3 = await this.crearUsuario({
-        nombre: 'Valentina',
-        apellido: 'López',
-        email: 'valentina@matchify.com',
-        fechaNacimiento: '2001-03-30',
-        biografia: 'Estudiante de cine. Fanática de los videojuegos, el senderismo y las buenas charlas.',
-        ubicacionId: u3?.id || ubicacionId,
-        activo: true,
-      }).catch(() => null);
-
-      // 4. Vincular algunos hobbies
-      if (usr1?.id && h1?.id) await this.asociarHobbie(usr1.id, h1.id).catch(() => {});
-      if (usr1?.id && h3?.id) await this.asociarHobbie(usr1.id, h3.id).catch(() => {});
-      if (usr2?.id && h2?.id) await this.asociarHobbie(usr2.id, h2.id).catch(() => {});
-      if (usr2?.id && h4?.id) await this.asociarHobbie(usr2.id, h4.id).catch(() => {});
-      if (usr3?.id && h3?.id) await this.asociarHobbie(usr3.id, h3.id).catch(() => {});
-      if (usr3?.id && h5?.id) await this.asociarHobbie(usr3.id, h5.id).catch(() => {});
-
-      return true;
-    } catch {
-      return false;
-    }
   },
 };

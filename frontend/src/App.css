@@ -341,7 +341,7 @@ body {
 /* KPI / Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
@@ -612,12 +612,12 @@ body {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 680px;
+  min-width: 600px;
 }
 
 .data-table th {
   background: #f8fafc;
-  padding: 0.85rem 1.25rem;
+  padding: 0.75rem 0.9rem;
   font-weight: 700;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -628,9 +628,9 @@ body {
 }
 
 .data-table td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 0.9rem;
   border-bottom: 1px solid var(--border);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   vertical-align: middle;
 }
 

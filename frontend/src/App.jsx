@@ -18,7 +18,6 @@ import DevResetPanel from './components/AdminView/DevResetPanel';
 import UsuariosTab from './components/AdminView/UsuariosTab';
 import HobbiesTab from './components/AdminView/HobbiesTab';
 import UbicacionesTab from './components/AdminView/UbicacionesTab';
-import RelacionesTab from './components/AdminView/RelacionesTab';
 import UsuarioModal from './components/AdminView/UsuarioModal';
 import HobbieModal from './components/AdminView/HobbieModal';
 import UbicacionModal from './components/AdminView/UbicacionModal';
@@ -209,20 +208,6 @@ export default function App() {
     }
   };
 
-  const handleSeedData = async () => {
-    setLoading(true);
-    showToast('Generando datos de prueba en la base de datos...', 'info');
-    try {
-      await api.seedInitialData();
-      await cargarTodo();
-      showToast('¡Datos de prueba cargados con éxito! 🎉', 'success');
-    } catch (err) {
-      showToast(err.message || 'Error al cargar datos demo', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // =========================================================================
   // AUTH HANDLERS
   // =========================================================================
@@ -293,7 +278,6 @@ export default function App() {
     inactivos: usuarios.length - totalActivos,
     totalHobbies: hobbies.length,
     totalUbicaciones: ubicaciones.length,
-    totalRelaciones: usuarios.reduce((acc, u) => acc + (u.hobbies ? u.hobbies.length : 0), 0),
     matchesCount: sessionMatches.length,
   };
 
@@ -340,10 +324,16 @@ export default function App() {
   const handleGuardarHobbie = async (formData) => {
     try {
       if (hobbieModal.data) {
-        await api.actualizarHobbie(hobbieModal.data.id, formData);
+        const updated = await api.actualizarHobbie(hobbieModal.data.id, formData);
+        setHobbies((prev) =>
+          prev.map((h) => (h.id === hobbieModal.data.id ? { ...h, ...formData, ...updated } : h))
+        );
         showToast(`Hobbie "${formData.nombre}" actualizado`, 'success');
       } else {
-        await api.crearHobbie(formData);
+        const created = await api.crearHobbie(formData);
+        if (created?.id) {
+          setHobbies((prev) => [...prev, created]);
+        }
         showToast(`Hobbie "${formData.nombre}" creado`, 'success');
       }
       setHobbieModal({ open: false, data: null });
@@ -448,7 +438,6 @@ export default function App() {
     if (currentAdminTab === 'usuarios') return 'Gestión de Usuarios';
     if (currentAdminTab === 'hobbies') return 'Catálogo de Hobbies';
     if (currentAdminTab === 'ubicaciones') return 'Gestión de Ubicaciones';
-    if (currentAdminTab === 'relaciones') return 'Asignación de Hobbies';
     return 'Panel de Administración';
   };
 
@@ -530,24 +519,16 @@ export default function App() {
                 <h2>{getHeaderTitle()}</h2>
                 <p>Panel de control y gestión global de la base de datos de Matchify.</p>
               </div>
-              <div className="header-actions" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary shadow-sm"
-                  onClick={handleSeedData}
-                  title="Poblar base de datos con datos de prueba iniciales"
-                >
-                  🌱 Cargar Datos Demo
-                </button>
-                {getPrimaryActionText() && (
+              {getPrimaryActionText() && (
+                <div className="header-actions">
                   <button
                     className="btn btn-primary shadow-sm"
                     onClick={handlePrimaryActionClick}
                   >
                     {getPrimaryActionText()}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </header>
 
             {/* KPI Stats Cards */}
@@ -599,15 +580,6 @@ export default function App() {
                 onOpenCreate={() => setUbicacionModal({ open: true, data: null })}
                 onOpenEdit={(ub) => setUbicacionModal({ open: true, data: ub })}
                 onOpenDelete={handleEliminarUbicacion}
-              />
-            )}
-
-            {currentAdminTab === 'relaciones' && (
-              <RelacionesTab
-                usuarios={usuarios}
-                hobbies={hobbies}
-                onRelationChanged={cargarTodo}
-                onShowToast={showToast}
               />
             )}
           </div>
