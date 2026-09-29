@@ -32,6 +32,7 @@ const crear = async (datos) => {
 
   return usuarioRepository.crear({
     ...datos,
+    ...(datos.biografia !== undefined ? { biografia: datos.biografia?.trim() || null } : {}),
     fechaNacimiento: new Date(datos.fechaNacimiento),
   });
 };
@@ -59,6 +60,7 @@ const actualizar = async (id, datos) => {
 
   return usuarioRepository.actualizar(id, {
     ...datos,
+    ...(datos.biografia !== undefined ? { biografia: datos.biografia?.trim() || null } : {}),
     fechaNacimiento: new Date(datos.fechaNacimiento),
   });
 };

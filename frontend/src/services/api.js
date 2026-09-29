@@ -15,8 +15,8 @@ const cleanUserPayload = (data) => {
     payload.fechaNacimiento = new Date('2000-01-01').toISOString();
   }
 
-  if (data.biografia !== undefined && data.biografia !== null) {
-    payload.biografia = String(data.biografia).trim() || null;
+  if (data.biografia !== undefined) {
+    payload.biografia = data.biografia === null ? null : String(data.biografia).trim();
   }
 
   if (data.activo !== undefined) payload.activo = Boolean(data.activo);

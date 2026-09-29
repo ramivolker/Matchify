@@ -52,7 +52,7 @@ const validarUsuario = (datos) => {
     throw new ValidationError("La fecha de nacimiento no puede estar en el futuro");
   }
 
-  if (biografia !== undefined && (typeof biografia !== "string" || biografia.length > 500)) {
+  if (biografia !== undefined && biografia !== null && (typeof biografia !== "string" || biografia.length > 500)) {
     throw new ValidationError("La biografía debe ser un texto de hasta 500 caracteres");
   }
 
