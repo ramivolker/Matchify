@@ -57,7 +57,7 @@ export default function MiPerfilTab({
   const [nombre, setNombre] = useState(currentUser?.nombre || '');
   const [apellido, setApellido] = useState(currentUser?.apellido || '');
   const [email, setEmail] = useState(currentUser?.email || '');
-  const [biografia, setBiografia] = useState(currentUser?.biografia || '');
+  const [biografia, setBiografia] = useState(currentUser?.biografia ?? '');
   const [ubicacionId, setUbicacionId] = useState(currentUser?.ubicacionId || '');
 
   // Assigned hobbies with local optimistic state
@@ -77,11 +77,15 @@ export default function MiPerfilTab({
     setCurrentAvatarUrl(getUserAvatar(currentUser));
   }, [currentUser]);
 
+  useEffect(() => {
+    setBiografia(currentUser?.biografia ?? '');
+  }, [currentUser?.id, currentUser?.biografia]);
+
   // Calculate Profile Completeness Percentage
   let completionScore = 0;
   if (currentUser?.nombre && currentUser?.apellido) completionScore += 30;
   if (currentUser?.email) completionScore += 20;
-  if (currentUser?.biografia && currentUser?.biografia.trim().length > 10) completionScore += 25;
+  if (currentUser?.biografia != null && currentUser.biografia.trim().length > 0) completionScore += 25;
   if (currentUser?.ubicacionId || currentUser?.ubicacion) completionScore += 10;
   if (localHobbyIds.length >= 2) completionScore += 15;
 
@@ -160,13 +164,13 @@ export default function MiPerfilTab({
         apellido: apellido.trim(),
         email: email.trim(),
         fechaNacimiento: currentUser?.fechaNacimiento || '2000-01-01',
-        biografia: biografia.trim() || undefined,
+        biografia: biografia.trim(),
         ubicacionId: ubicacionId ? parseInt(ubicacionId, 10) : null,
         activo: currentUser?.activo !== false,
       });
+      await onProfileUpdated();
       onShowToast('Tu perfil ha sido actualizado con éxito ✨', 'success');
       setIsEditing(false);
-      onProfileUpdated();
     } catch (err) {
       onShowToast(err.message || 'Error al actualizar perfil', 'error');
     } finally {
@@ -178,31 +182,33 @@ export default function MiPerfilTab({
     <div className="profile-tab-wrapper">
       <div className="card profile-tab-card">
         {/* Barra de Progreso de Completitud del Perfil (Onboarding progresivo) */}
-        <div className="profile-completeness-banner">
-          <div className="completeness-header">
-            <div>
-              <span className="completeness-title">Nivel de completitud de tu perfil</span>
-              <p className="completeness-sub">
-                Los perfiles con biografía y al menos 2 hobbies reciben 4 veces más matches.
-              </p>
+        {completionScore < 100 && (
+          <div className="profile-completeness-banner">
+            <div className="completeness-header">
+              <div>
+                <span className="completeness-title">Nivel de completitud de tu perfil</span>
+                <p className="completeness-sub">
+                  Los perfiles con biografía y al menos 2 hobbies reciben 4 veces más matches.
+                </p>
+              </div>
+              <span className="completeness-percentage">{completionScore}%</span>
             </div>
-            <span className="completeness-percentage">{completionScore}%</span>
+            <div className="completeness-bar-track">
+              <div
+                className="completeness-bar-fill"
+                style={{
+                  width: `${completionScore}%`,
+                  background:
+                    completionScore >= 80
+                      ? 'var(--success)'
+                      : completionScore >= 50
+                      ? 'var(--primary)'
+                      : 'var(--warning)',
+                }}
+              />
+            </div>
           </div>
-          <div className="completeness-bar-track">
-            <div
-              className="completeness-bar-fill"
-              style={{
-                width: `${completionScore}%`,
-                background:
-                  completionScore >= 80
-                    ? 'var(--success)'
-                    : completionScore >= 50
-                    ? 'var(--primary)'
-                    : 'var(--warning)',
-              }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Header con Avatar y Verificación */}
         <div className="profile-header-banner">
@@ -229,7 +235,7 @@ export default function MiPerfilTab({
 
           <div className="profile-banner-details">
             <h2>
-              {currentUser?.nombre} {currentUser?.apellido}{' '}
+              <span>{currentUser?.nombre} {currentUser?.apellido}</span>
               <span className="tinder-verified-badge" title="Perfil Verificado">
                 ✓ Verificado
               </span>
@@ -244,13 +250,6 @@ export default function MiPerfilTab({
                   : 'Sin ubicación asignada'}
               </span>
               <span className="badge badge-tag">🔥 {localHobbyIds.length} Hobbies</span>
-              <button
-                type="button"
-                className="btn btn-outline btn-xs btn-change-photo"
-                onClick={() => setIsAvatarModalOpen(true)}
-              >
-                📸 Cambiar foto
-              </button>
             </div>
           </div>
 
@@ -326,7 +325,7 @@ export default function MiPerfilTab({
                 value={biografia}
                 onChange={(e) => setBiografia(e.target.value)}
                 placeholder="Escribe algo sobre ti, qué te gusta hacer en tu tiempo libre..."
-                maxLength={400}
+                maxLength={500}
               />
             </div>
 

@@ -2329,9 +2329,17 @@ body {
 }
 
 .profile-banner-details h2 {
+  display: flex;
+  align-items: center;
+  column-gap: 18px;
   font-size: 1.6rem;
   font-weight: 800;
   color: var(--text-dark);
+}
+
+.profile-banner-details h2 .tinder-verified-badge {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .profile-email-sub {
@@ -3850,6 +3858,9 @@ body {
 }
 
 .profile-banner-avatar {
+  width: 136.8px;
+  height: 136.8px;
+  font-size: 3.24rem;
   transition: all 0.3s ease;
 }
 
@@ -3876,23 +3887,6 @@ body {
   transform: scale(1.15);
   background: var(--secondary);
   color: #1C1D22;
-}
-
-.btn-change-photo {
-  font-size: 0.75rem;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  border-color: var(--glass-border);
-  background: var(--glass-surface);
-  color: var(--text-dark);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-change-photo:hover {
-  border-color: var(--secondary);
-  color: var(--secondary);
-  background: rgba(0, 245, 212, 0.15);
 }
 
 /* Avatares en Lista de Matches & Chat */
