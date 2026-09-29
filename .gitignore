@@ -18,3 +18,7 @@ frontend/dist/
 # OS / IDE
 .DS_Store
 Thumbs.db
+.vscode/
+
+# Prisma generated client
+backend/src/generated/
