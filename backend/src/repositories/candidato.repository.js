@@ -12,9 +12,24 @@ const obtenerCandidatos = async (usuarioId) => {
     where: {
       id: { not: usuarioId },
       activo: true,
-      interaccionesRecibidas: { none: { usuarioEmisorId: usuarioId } },
+
+      interaccionesRecibidas: {
+        none: { usuarioEmisorId: usuarioId },
+      },
+
+      // El usuario actual NO bloqueó al candidato
+      bloqueosRecibidos: {
+        none: { usuarioBloqueadorId: usuarioId },
+      },
+
+      // El candidato NO bloqueó al usuario actual
+      bloqueosRealizados: {
+        none: { usuarioBloqueadoId: usuarioId },
+      },
+
       ubicacion: { isNot: null },
     },
+
     select: {
       id: true,
       nombre: true,
@@ -23,7 +38,11 @@ const obtenerCandidatos = async (usuarioId) => {
       biografia: true,
       ubicacion: true,
       tipoUsuario: true,
-      hobbies: { select: { hobbie: true } },
+      hobbies: {
+        select: {
+          hobbie: true,
+        },
+      },
     },
   });
 };

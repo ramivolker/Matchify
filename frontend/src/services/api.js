@@ -75,6 +75,31 @@ export const api = {
     return data;
   },
 
+  async bloquearUsuario(usuarioBloqueadorId, usuarioBloqueadoId) {
+    const res = await fetch(`${API_BASE}/bloqueos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        usuarioBloqueadorId,
+        usuarioBloqueadoId,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        'Error al bloquear usuario'
+      );
+    }
+
+    return data;
+  },
+
   // Health
   async getHealth() {
     const res = await fetch(`${API_BASE}/health`);
