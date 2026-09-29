@@ -274,17 +274,49 @@ export default function App() {
   };
 
   // Safety report handler
-  const handleSubmitReport = ({ userId, userName, reason, blocked }) => {
-    if (blocked) {
-      setBlockedUserIds((prev) => [...prev, userId]);
-      setSessionMatches((prev) => prev.filter((m) => m.id !== userId));
-      if (activeChatUser?.id === userId) setActiveChatUser(null);
-      showToast(`Has reportado y bloqueado a ${userName}`, 'info');
-    } else {
-      showToast(`Reporte enviado para ${userName}`, 'info');
+  const handleSubmitReport = async ({
+    userId,
+    userName,
+    reason,
+    blocked,
+  }) => {
+    try {
+      if (blocked) {
+        await api.bloquearUsuario(
+          currentTinderUserId,
+          userId
+        );
+
+        setBlockedUserIds((prev) =>
+          prev.includes(userId)
+            ? prev
+            : [...prev, userId]
+        );
+
+        setSessionMatches((prev) =>
+          prev.filter((m) => m.id !== userId)
+        );
+
+        if (activeChatUser?.id === userId) {
+          setActiveChatUser(null);
+        }
+
+        setRefreshTinder((n) => n + 1);
+
+        showToast(
+          `Has reportado y bloqueado a ${userName}`,
+          'info'
+        );
+      } else {
+        showToast(
+          `Reporte enviado para ${userName}`,
+          'info'
+        );
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
     }
   };
-
   // Stats calculation
   const totalActivos = usuarios.filter((u) => u.activo !== false).length;
   const stats = {
