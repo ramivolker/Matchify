@@ -1,4 +1,5 @@
 import React from 'react';
+import { TableSkeleton } from '../common/SkeletonLoader';
 
 export default function UbicacionesTab({
   ubicaciones,
@@ -32,12 +33,7 @@ export default function UbicacionesTab({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="5" className="loading-cell">
-                  <div className="spinner"></div>
-                  <p>Cargando ubicaciones...</p>
-                </td>
-              </tr>
+              <TableSkeleton rows={6} cols={5} />
             ) : ubicaciones.length === 0 ? (
               <tr>
                 <td colSpan="5">

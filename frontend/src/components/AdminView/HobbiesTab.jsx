@@ -1,5 +1,6 @@
 import React from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
+import { TableSkeleton } from '../common/SkeletonLoader';
 
 export default function HobbiesTab({
   hobbies,
@@ -31,12 +32,7 @@ export default function HobbiesTab({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="3" className="loading-cell">
-                  <div className="spinner"></div>
-                  <p>Cargando hobbies...</p>
-                </td>
-              </tr>
+              <TableSkeleton rows={6} cols={3} />
             ) : hobbies.length === 0 ? (
               <tr>
                 <td colSpan="3">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import UserAvatar from '../common/UserAvatar';
 
 export default function TinderMatches({
   matches,
@@ -111,7 +112,7 @@ export default function TinderMatches({
                   title={`Conversar con ${m.nombre}`}
                 >
                   <div className="match-avatar-ring">
-                    {`${m?.nombre?.charAt(0) || 'U'}${m?.apellido?.charAt(0) || ''}`.toUpperCase()}
+                    <UserAvatar user={m} size="sm" className="match-avatar-inner" />
                     <span className="live-mini-dot" />
                   </div>
                   <span className="match-pill-name">{m.nombre}</span>
@@ -143,7 +144,7 @@ export default function TinderMatches({
                     onClick={() => onSelectChatUser(m)}
                   >
                     <div className="conversation-avatar">
-                      {`${m?.nombre?.charAt(0) || 'U'}${m?.apellido?.charAt(0) || ''}`.toUpperCase()}
+                      <UserAvatar user={m} size="md" className="conversation-avatar-inner" />
                       <span className="live-mini-dot" />
                     </div>
 
@@ -207,7 +208,7 @@ export default function TinderMatches({
                 title="Ver perfil completo"
               >
                 <div className="chat-user-avatar">
-                  {`${currentChatUser?.nombre?.charAt(0) || 'U'}${currentChatUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
+                  <UserAvatar user={currentChatUser} size="md" className="chat-avatar-inner" />
                   <span className="live-mini-dot" />
                 </div>
                 <div>
@@ -243,7 +244,7 @@ export default function TinderMatches({
               {/* Saludo inicial con Hobbies en Común */}
               <div className="chat-intro-banner">
                 <div className="chat-intro-avatar">
-                  {`${currentChatUser?.nombre?.charAt(0) || 'U'}${currentChatUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
+                  <UserAvatar user={currentChatUser} size="lg" className="chat-intro-avatar-inner" />
                 </div>
                 <h4>Hiciste match con {currentChatUser.nombre}</h4>
                 <p>

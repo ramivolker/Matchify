@@ -1,4 +1,5 @@
 import React from 'react';
+import UserAvatar from '../common/UserAvatar';
 
 export default function MatchCelebrationModal({
   isOpen,
@@ -38,11 +39,11 @@ export default function MatchCelebrationModal({
         {/* Avatars Collision with Animated Heart */}
         <div className="match-avatars-collision">
           <div className="match-avatar-circle">
-            {`${currentUser?.nombre?.charAt(0) || 'T'}${currentUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
+            <UserAvatar user={currentUser} size="lg" className="match-avatar-circle-img" />
           </div>
           <div className="match-heart-center">💚</div>
           <div className="match-avatar-circle">
-            {`${matchedUser.nombre?.charAt(0) || 'U'}${matchedUser.apellido?.charAt(0) || ''}`.toUpperCase()}
+            <UserAvatar user={matchedUser} size="lg" className="match-avatar-circle-img" />
           </div>
         </div>
 

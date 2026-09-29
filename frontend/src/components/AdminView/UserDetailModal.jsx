@@ -1,10 +1,9 @@
 import React from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
+import UserAvatar from '../common/UserAvatar';
 
 export default function UserDetailModal({ isOpen, onClose, usuario }) {
   if (!isOpen || !usuario) return null;
-
-  const iniciales = `${usuario.nombre?.charAt(0) || 'U'}${usuario.apellido?.charAt(0) || ''}`.toUpperCase();
 
   const calcularEdad = (fechaString) => {
     if (!fechaString) return '-';
@@ -39,7 +38,7 @@ export default function UserDetailModal({ isOpen, onClose, usuario }) {
 
         <div className="modal-body">
           <div className="profile-detail-card">
-            <div className="profile-avatar-lg">{iniciales}</div>
+            <UserAvatar user={usuario} size="lg" className="profile-avatar-lg" />
             <div className="profile-name">
               {usuario.nombre} {usuario.apellido}
             </div>

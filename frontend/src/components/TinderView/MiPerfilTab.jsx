@@ -1,6 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../../services/api';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
+import { getUserAvatar } from '../../utils/userAvatarUtils';
+import UserAvatar from '../common/UserAvatar';
+import AvatarPickerModal from './AvatarPickerModal';
+
+// Categorización inteligente de hobbies
+export const HOBBIE_CATEGORIES = [
+  { id: 'all', label: 'Todos', icon: '🌟' },
+  {
+    id: 'deportes',
+    label: 'Deporte & Fitness',
+    icon: '⚽',
+    keywords: ['fútbol', 'gimnasio', 'running', 'ciclismo', 'pádel', 'padel', 'tenis', 'básquet', 'basquet', 'natación', 'natacion', 'yoga', 'trekking', 'montaña', 'deporte'],
+  },
+  {
+    id: 'arte',
+    label: 'Arte & Cultura',
+    icon: '🎨',
+    keywords: ['fotografía', 'fotografia', 'arte', 'música', 'musica', 'en vivo', 'lectura', 'cine', 'series', 'teatro', 'diseño', 'dibujo'],
+  },
+  {
+    id: 'social',
+    label: 'Social & Salidas',
+    icon: '☕',
+    keywords: ['gastronomía', 'gastronomia', 'café', 'cafe', 'cocina', 'viajes', 'mascotas', 'bar', 'amigos', 'fiesta'],
+  },
+  {
+    id: 'tech',
+    label: 'Tecnología & Geek',
+    icon: '💻',
+    keywords: ['programación', 'programacion', 'tecnología', 'tecnologia', 'videojuegos', 'gaming', 'computacion', 'software'],
+  },
+  { id: 'mine', label: 'Mis Hobbies', icon: '🔥' },
+];
 
 export default function MiPerfilTab({
   currentUser,
@@ -11,6 +44,12 @@ export default function MiPerfilTab({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(() => getUserAvatar(currentUser));
+
+  // Buscador y categoría activa de hobbies
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Form states
   const [nombre, setNombre] = useState(currentUser?.nombre || '');
@@ -23,9 +62,22 @@ export default function MiPerfilTab({
   const [incognitoMode, setIncognitoMode] = useState(false);
   const [hideDistance, setHideDistance] = useState(false);
 
-  // Assigned hobbies
-  const userHobbyIds =
-    currentUser?.hobbies?.map((h) => (h.hobbie || h).id || h.hobbieId) || [];
+  // Assigned hobbies with local optimistic state
+  const extractHobbyIds = (user) => {
+    return (
+      user?.hobbies
+        ?.map((h) => (h.hobbie || h).id || h.hobbieId)
+        .filter(Boolean) || []
+    );
+  };
+
+  const [localHobbyIds, setLocalHobbyIds] = useState(() => extractHobbyIds(currentUser));
+  const [busyHobbyId, setBusyHobbyId] = useState(null);
+
+  useEffect(() => {
+    setLocalHobbyIds(extractHobbyIds(currentUser));
+    setCurrentAvatarUrl(getUserAvatar(currentUser));
+  }, [currentUser]);
 
   // Calculate Profile Completeness Percentage
   let completionScore = 0;
@@ -33,11 +85,45 @@ export default function MiPerfilTab({
   if (currentUser?.email) completionScore += 20;
   if (currentUser?.biografia && currentUser?.biografia.trim().length > 10) completionScore += 25;
   if (currentUser?.ubicacionId || currentUser?.ubicacion) completionScore += 10;
-  if (userHobbyIds.length >= 2) completionScore += 15;
+  if (localHobbyIds.length >= 2) completionScore += 15;
+
+  // Filtrado reactivo de hobbies por texto y categoría
+  const filteredHobbies = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    return hobbies.filter((hobbie) => {
+      const hobbieNombre = (hobbie.nombre || '').toLowerCase();
+
+      // Filtro por texto de búsqueda
+      if (q && !hobbieNombre.includes(q)) {
+        return false;
+      }
+
+      // Filtro por categoría seleccionada
+      if (selectedCategory === 'all') return true;
+
+      if (selectedCategory === 'mine') {
+        return localHobbyIds.includes(hobbie.id);
+      }
+
+      const categoryObj = HOBBIE_CATEGORIES.find((cat) => cat.id === selectedCategory);
+      if (!categoryObj || !categoryObj.keywords) return true;
+
+      return categoryObj.keywords.some((keyword) => hobbieNombre.includes(keyword));
+    });
+  }, [hobbies, searchQuery, selectedCategory, localHobbyIds]);
 
   const handleToggleHobbie = async (hobbieId) => {
+    if (busyHobbyId) return;
     if (navigator.vibrate) navigator.vibrate(15);
-    const isAssigned = userHobbyIds.includes(hobbieId);
+    const isAssigned = localHobbyIds.includes(hobbieId);
+
+    // Optimistic UI update
+    setLocalHobbyIds((prev) =>
+      isAssigned ? prev.filter((id) => id !== hobbieId) : [...prev, hobbieId]
+    );
+    setBusyHobbyId(hobbieId);
+
     try {
       if (isAssigned) {
         await api.desasociarHobbie(currentUser.id, hobbieId);
@@ -46,9 +132,24 @@ export default function MiPerfilTab({
         await api.asociarHobbie(currentUser.id, hobbieId);
         onShowToast('¡Hobbie agregado a tu perfil! 🔥', 'success');
       }
-      onProfileUpdated();
+      if (onProfileUpdated) {
+        await onProfileUpdated();
+      }
     } catch (err) {
-      onShowToast(err.message || 'Error al actualizar hobbies', 'error');
+      const msg = err.message || '';
+      // Self-heal if state got desynced with server
+      if (msg.includes('ya está asociado')) {
+        setLocalHobbyIds((prev) => (prev.includes(hobbieId) ? prev : [...prev, hobbieId]));
+      } else if (msg.includes('no está asociado')) {
+        setLocalHobbyIds((prev) => prev.filter((id) => id !== hobbieId));
+      } else {
+        setLocalHobbyIds((prev) =>
+          isAssigned ? [...prev, hobbieId] : prev.filter((id) => id !== hobbieId)
+        );
+        onShowToast(msg || 'Error al actualizar hobbies', 'error');
+      }
+    } finally {
+      setBusyHobbyId(null);
     }
   };
 
@@ -107,8 +208,25 @@ export default function MiPerfilTab({
 
         {/* Header con Avatar y Verificación */}
         <div className="profile-header-banner">
-          <div className="profile-banner-avatar">
-            {`${currentUser?.nombre?.charAt(0) || 'U'}${currentUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
+          <div className="profile-banner-avatar-wrapper" onClick={() => setIsAvatarModalOpen(true)} title="Cambiar foto de perfil">
+            <UserAvatar
+              user={currentUser}
+              customAvatar={currentAvatarUrl}
+              size="lg"
+              className="profile-banner-avatar"
+            />
+            <button
+              type="button"
+              className="avatar-edit-badge-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAvatarModalOpen(true);
+              }}
+              title="Cambiar foto de perfil"
+              aria-label="Cambiar foto de perfil"
+            >
+              📷
+            </button>
           </div>
 
           <div className="profile-banner-details">
@@ -127,7 +245,14 @@ export default function MiPerfilTab({
                   ? `${currentUser.ubicacion.ciudad}, ${currentUser.ubicacion.provincia}`
                   : 'Sin ubicación asignada'}
               </span>
-              <span className="badge badge-tag">🔥 {userHobbyIds.length} Hobbies</span>
+              <span className="badge badge-tag">🔥 {localHobbyIds.length} Hobbies</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-xs btn-change-photo"
+                onClick={() => setIsAvatarModalOpen(true)}
+              >
+                📸 Cambiar foto
+              </button>
             </div>
           </div>
 
@@ -286,28 +411,111 @@ export default function MiPerfilTab({
                 Haz clic sobre un hobbie para activarlo o quitarlo de tu perfil en tiempo real.
               </p>
             </div>
-            <span className="badge badge-tag">{userHobbyIds.length} seleccionados</span>
+            <span className="badge badge-tag">{localHobbyIds.length} seleccionados</span>
           </div>
 
-          <div className="interactive-hobbies-grid">
-            {hobbies.map((h) => {
-              const isSelected = userHobbyIds.includes(h.id);
-              return (
+          {/* Barra de Búsqueda y Filtros por Categoría */}
+          <div className="hobbies-filter-toolbar">
+            <div className="hobbies-search-box">
+              <span className="hobbies-search-icon">🔍</span>
+              <input
+                type="text"
+                className="hobbies-search-input"
+                placeholder="Buscar hobbie (ej. fútbol, música, cocina)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
                 <button
-                  key={h.id}
                   type="button"
-                  className={`hobby-select-chip ${isSelected ? 'selected' : ''}`}
-                  onClick={() => handleToggleHobbie(h.id)}
-                  aria-pressed={isSelected}
+                  className="hobbies-search-clear"
+                  onClick={() => setSearchQuery('')}
+                  title="Limpiar búsqueda"
                 >
-                  <span className="hobby-chip-icon">{isSelected ? '✓' : '+'}</span>
-                  <span className="hobby-chip-name">{getHobbieEmoji(h)} {h.nombre}</span>
+                  ✕
                 </button>
-              );
-            })}
+              )}
+            </div>
+
+            {/* Categorías de Hobbies */}
+            <div className="hobbies-category-chips-row">
+              {HOBBIE_CATEGORIES.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                let count = 0;
+                if (cat.id === 'all') {
+                  count = hobbies.length;
+                } else if (cat.id === 'mine') {
+                  count = localHobbyIds.length;
+                } else if (cat.keywords) {
+                  count = hobbies.filter((h) =>
+                    cat.keywords.some((k) => (h.nombre || '').toLowerCase().includes(k))
+                  ).length;
+                }
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className={`hobby-category-filter-btn ${isActive ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat.id)}
+                  >
+                    <span>{cat.icon} {cat.label}</span>
+                    <span className="category-filter-count">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Grilla de Hobbies Filtrados */}
+          {filteredHobbies.length === 0 ? (
+            <div className="hobbies-empty-filter-state">
+              <span style={{ fontSize: '2rem' }}>🔎</span>
+              <p>No se encontraron hobbies que coincidan con tu búsqueda.</p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Restablecer filtros
+              </button>
+            </div>
+          ) : (
+            <div className="interactive-hobbies-grid">
+              {filteredHobbies.map((h) => {
+                const isSelected = localHobbyIds.includes(h.id);
+                return (
+                  <button
+                    key={h.id}
+                    type="button"
+                    className={`hobby-select-chip ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleToggleHobbie(h.id)}
+                    aria-pressed={isSelected}
+                  >
+                    <span className="hobby-chip-icon">{isSelected ? '✓' : '+'}</span>
+                    <span className="hobby-chip-name">{getHobbieEmoji(h)} {h.nombre}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Modal para cambiar foto de perfil o avatar */}
+      <AvatarPickerModal
+        currentUser={currentUser}
+        currentAvatar={currentAvatarUrl}
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        onAvatarSaved={(newAvatar) => {
+          setCurrentAvatarUrl(newAvatar);
+        }}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }

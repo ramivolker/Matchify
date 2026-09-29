@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
+import UserAvatar from '../common/UserAvatar';
 
 export default function TinderDeck({
   usuarios = [],
@@ -273,8 +274,12 @@ export default function TinderDeck({
                 ⚠️
               </button>
 
-              <div className="tinder-avatar-big">
-                {`${activeProfile.nombre?.charAt(0) || 'U'}${activeProfile.apellido?.charAt(0) || ''}`.toUpperCase()}
+              <div className="tinder-avatar-big-frame">
+                <UserAvatar
+                  user={activeProfile}
+                  size="hero"
+                  className="tinder-avatar-big"
+                />
               </div>
 
               {commonCount > 0 && (

@@ -29,6 +29,7 @@ import TinderDeck from './components/TinderView/TinderDeck';
 import TinderMatches from './components/TinderView/TinderMatches';
 import MiPerfilTab from './components/TinderView/MiPerfilTab';
 import MatchCelebrationModal from './components/TinderView/MatchCelebrationModal';
+import { TinderCardSkeleton } from './components/common/SkeletonLoader';
 
 export default function App() {
   // Theme state (Dark Mode support)
@@ -187,6 +188,20 @@ export default function App() {
       setUsuarios(usrs || []);
 
       if (usrs?.length > 0) {
+        if (session?.user?.id) {
+          const freshUser = usrs.find((u) => u.id === session.user.id);
+          if (freshUser) {
+            setSession((prev) => {
+              if (!prev) return prev;
+              const next = { ...prev, user: freshUser };
+              try {
+                localStorage.setItem('matchify_session', JSON.stringify(next));
+              } catch {}
+              return next;
+            });
+          }
+        }
+
         setCurrentTinderUserId((prev) => {
           if (prev) return prev;
           try {
@@ -473,7 +488,8 @@ export default function App() {
   }
 
   const isAdmin = session.role === 'admin';
-  const currentLoggedInUser = session.user;
+  const currentLoggedInUser =
+    usuarios.find((u) => u.id === session?.user?.id) || session?.user;
 
   return (
     <div className="app-container">
@@ -635,9 +651,9 @@ export default function App() {
             )}
 
             {tinderLoading && (
-              <p role="status">
-                Cargando candidatos y matches…
-              </p>
+              <div className="tinder-loading-wrapper">
+                <TinderCardSkeleton />
+              </div>
             )}
 
             {currentUserTab === 'swipe' && !tinderLoading && (

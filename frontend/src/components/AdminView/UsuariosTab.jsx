@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TableSkeleton } from '../common/SkeletonLoader';
 
 export default function UsuariosTab({
   usuarios,
@@ -108,12 +109,7 @@ export default function UsuariosTab({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="7" className="loading-cell">
-                  <div className="spinner"></div>
-                  <p>Cargando usuarios...</p>
-                </td>
-              </tr>
+              <TableSkeleton rows={7} cols={7} />
             ) : usuariosFiltrados.length === 0 ? (
               <tr>
                 <td colSpan="7">
