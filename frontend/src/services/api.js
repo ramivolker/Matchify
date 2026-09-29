@@ -35,6 +35,25 @@ const cleanUserPayload = (data) => {
 };
 
 export const api = {
+  async getPreferencia(usuarioId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/preferencia`);
+    const data = await res.json();
+    if (res.status === 404 && data.error === 'Preferencia no encontrada') return null;
+    if (!res.ok) throw new Error(data.message || data.error || 'Error al cargar preferencias');
+    return data;
+  },
+
+  async guardarPreferencia(usuarioId, data, existe) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/preferencia`, {
+      method: existe ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || json.error || 'Error al guardar preferencias');
+    return json;
+  },
+
   async getResetHabilitado() {
     const res = await fetch(`${API_BASE}/dev/interacciones`);
     if (res.status === 403) return false;

@@ -723,6 +723,7 @@ export default function App() {
                 ubicaciones={ubicaciones}
                 hobbies={hobbies}
                 onProfileUpdated={cargarTodo}
+                onPreferencesUpdated={() => setRefreshTinder((n) => n + 1)}
                 onShowToast={showToast}
               />
             )}
