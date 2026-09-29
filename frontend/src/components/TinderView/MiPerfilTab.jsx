@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
+import PreferenciasSection from './PreferenciasSection';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
 
 export default function MiPerfilTab({
@@ -7,6 +8,7 @@ export default function MiPerfilTab({
   ubicaciones,
   hobbies,
   onProfileUpdated,
+  onPreferencesUpdated,
   onShowToast,
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -230,6 +232,11 @@ export default function MiPerfilTab({
         )}
 
         {/* SECCIÓN DE PRIVACIDAD Y SEGURIDAD */}
+        {currentUser?.id && (
+          <PreferenciasSection key={currentUser.id} usuarioId={currentUser.id}
+            onSaved={onPreferencesUpdated} onShowToast={onShowToast} />
+        )}
+
         <div className="profile-privacy-section">
           <h3 className="section-title">🔒 Privacidad y Control de Perfil</h3>
           <div className="privacy-toggles-grid">
