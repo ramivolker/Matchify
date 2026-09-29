@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function TinderDeck({
   usuarios = [],
@@ -9,9 +9,16 @@ export default function TinderDeck({
   onSwipe,
   onRewind,
   onOpenDetail,
+  onOpenReport,
+  blockedUserIds = [],
 }) {
   const [pending, setPending] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [swipeAnimation, setSwipeAnimation] = useState('');
   const actionLock = useRef(false);
+  const startPosRef = useRef({ x: 0, y: 0 });
 
   const deckQueue = candidatos;
 
@@ -20,19 +27,105 @@ export default function TinderDeck({
     usuarios.find((u) => u.id === currentUserId);
 
   const activeProfile = deckQueue[0];
-  
+
+  // Reset photo index and drag state on profile change
+  useEffect(() => {
+    setPhotoIndex(0);
+    setDragOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+    setSwipeAnimation('');
+  }, [activeProfile?.id]);
+
   const handleAction = async (direction) => {
-    if (!activeProfile || disabled || actionLock.current) return;
+    if (!activeProfile || disabled || pending || actionLock.current) return;
     actionLock.current = true;
     setPending(true);
+    setSwipeAnimation(direction);
+
+    // Haptic feedback
+    if (navigator.vibrate) {
+      if (direction === 'up') navigator.vibrate([20, 30, 20]);
+      else navigator.vibrate(20);
+    }
+
     try {
       await onSwipe(activeProfile, direction);
     } finally {
+      setSwipeAnimation('');
+      setDragOffset({ x: 0, y: 0 });
       actionLock.current = false;
       setPending(false);
     }
   };
-  const handleRewind = () => { if (!pending && !disabled) onRewind(); };
+
+  const handleRewind = () => {
+    if (!pending && !disabled) {
+      if (navigator.vibrate) navigator.vibrate(15);
+      onRewind();
+    }
+  };
+
+  // Keyboard navigation for Desktop
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (!activeProfile || pending || disabled) return;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleAction('right');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handleAction('left');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        handleAction('up');
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        onOpenDetail(activeProfile);
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleRewind();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeProfile, pending, disabled]);
+
+  // Touch handlers for mobile fluid swipe
+  const handleTouchStart = (e) => {
+    if (!activeProfile || pending || disabled) return;
+    const touch = e.touches[0];
+    startPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || !activeProfile) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPosRef.current.x;
+    const deltaY = touch.clientY - startPosRef.current.y;
+    setDragOffset({ x: deltaX, y: deltaY });
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging || !activeProfile) return;
+    setIsDragging(false);
+
+    const thresholdX = 90;
+    const thresholdY = -100;
+
+    if (dragOffset.x > thresholdX) {
+      handleAction('right');
+    } else if (dragOffset.x < -thresholdX) {
+      handleAction('left');
+    } else if (dragOffset.y < thresholdY) {
+      handleAction('up');
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
 
   const calcularEdad = (fechaString) => {
     if (!fechaString) return '-';
@@ -125,7 +218,7 @@ export default function TinderDeck({
           </div>
         ) : (
           <div
-            className="tinder-card"
+            className={`tinder-card ${swipeAnimation ? `swipe-${swipeAnimation}` : ''}`}
             key={activeProfile.id}
             style={dynamicCardStyle}
             onTouchStart={handleTouchStart}
