@@ -30,8 +30,25 @@ async function obtenerMatchesPorUsuario(usuarioId) {
   });
 }
 
+async function desactivarMatchEntreUsuarios(usuarioAId, usuarioBId) {
+  const usuario1Id = Math.min(usuarioAId, usuarioBId);
+  const usuario2Id = Math.max(usuarioAId, usuarioBId);
+
+  return prisma.match.updateMany({
+    where: {
+      usuario1Id,
+      usuario2Id,
+      activo: true,
+    },
+    data: {
+      activo: false,
+    },
+  });
+}
+
 module.exports = {
   crearMatch,
   obtenerMatchesPorUsuario,
+  desactivarMatchEntreUsuarios,
 };
 

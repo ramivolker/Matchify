@@ -38,6 +38,9 @@ model Usuario {
 
   matchesComoUsuario1 Match[] @relation("MatchUsuario1")
   matchesComoUsuario2 Match[] @relation("MatchUsuario2")
+
+  bloqueosRealizados Bloqueo[] @relation("BloqueosRealizados")
+  bloqueosRecibidos  Bloqueo[] @relation("BloqueosRecibidos")
 }
 
 model Ubicacion {
@@ -115,4 +118,18 @@ model Match {
   usuario2 Usuario @relation("MatchUsuario2", fields: [usuario2Id], references: [id], onDelete: Cascade)
 
   @@unique([usuario1Id, usuario2Id])
+}
+
+model Bloqueo {
+  id Int @id @default(autoincrement())
+
+  usuarioBloqueadorId Int
+  usuarioBloqueadoId  Int
+
+  fecha DateTime @default(now())
+
+  usuarioBloqueador Usuario @relation("BloqueosRealizados", fields: [usuarioBloqueadorId], references: [id], onDelete: Cascade)
+  usuarioBloqueado  Usuario @relation("BloqueosRecibidos", fields: [usuarioBloqueadoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioBloqueadorId, usuarioBloqueadoId])
 }
