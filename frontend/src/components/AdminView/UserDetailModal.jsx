@@ -1,4 +1,5 @@
 import React from 'react';
+import { getHobbieEmoji } from '../../utils/hobbieUtils';
 
 export default function UserDetailModal({ isOpen, onClose, usuario }) {
   if (!isOpen || !usuario) return null;
@@ -94,7 +95,7 @@ export default function UserDetailModal({ isOpen, onClose, usuario }) {
                     const h = item.hobbie || item;
                     return (
                       <span key={h.id || item.hobbieId} className="badge badge-tag">
-                        🎨 {h.nombre || 'Hobbie'}
+                        {getHobbieEmoji(h)} {h.nombre || 'Hobbie'}
                       </span>
                     );
                   })

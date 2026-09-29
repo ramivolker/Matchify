@@ -5,7 +5,7 @@ const validarHobbie = (datos) => {
     throw new ValidationError("Los datos del hobbie son obligatorios");
   }
 
-  const { nombre, descripcion } = datos;
+  const { nombre, descripcion, emoji } = datos;
 
   if (!nombre || typeof nombre !== "string" || !nombre.trim()) {
     throw new ValidationError("El nombre es obligatorio");
@@ -13,6 +13,10 @@ const validarHobbie = (datos) => {
 
   if (descripcion !== undefined && descripcion !== null && typeof descripcion !== "string") {
     throw new ValidationError("La descripción debe ser un texto");
+  }
+
+  if (emoji !== undefined && emoji !== null && typeof emoji !== "string") {
+    throw new ValidationError("El emoji debe ser un texto");
   }
 };
 

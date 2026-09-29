@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 enum TipoInteraccion {
@@ -51,9 +52,9 @@ model Ubicacion {
 }
 
 model Hobbie {
-  id          Int     @id @default(autoincrement())
-  nombre      String  @unique
-  descripcion String?
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique
+  emoji  String?
 
   usuarios UsuarioHobbie[]
 }

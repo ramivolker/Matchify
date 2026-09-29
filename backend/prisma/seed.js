@@ -1,10 +1,26 @@
 require('dotenv').config();
 
 const hobbies = [
-  'Programación', 'Videojuegos', 'Gimnasio', 'Fútbol', 'Running',
-  'Ciclismo', 'Música', 'Cine', 'Series', 'Lectura', 'Fotografía',
-  'Cocina', 'Viajes', 'Pádel', 'Tenis', 'Básquet', 'Natación',
-  'Tecnología', 'Arte', 'Mascotas',
+  { nombre: 'Programación', emoji: '💻' },
+  { nombre: 'Videojuegos', emoji: '🎮' },
+  { nombre: 'Gimnasio', emoji: '🏋️' },
+  { nombre: 'Fútbol', emoji: '⚽' },
+  { nombre: 'Running', emoji: '🏃' },
+  { nombre: 'Ciclismo', emoji: '🚴' },
+  { nombre: 'Música', emoji: '🎵' },
+  { nombre: 'Cine', emoji: '🍿' },
+  { nombre: 'Series', emoji: '📺' },
+  { nombre: 'Lectura', emoji: '📚' },
+  { nombre: 'Fotografía', emoji: '📸' },
+  { nombre: 'Cocina', emoji: '🍳' },
+  { nombre: 'Viajes', emoji: '✈️' },
+  { nombre: 'Pádel', emoji: '🎾' },
+  { nombre: 'Tenis', emoji: '🎾' },
+  { nombre: 'Básquet', emoji: '🏀' },
+  { nombre: 'Natación', emoji: '🏊' },
+  { nombre: 'Tecnología', emoji: '📱' },
+  { nombre: 'Arte', emoji: '🎨' },
+  { nombre: 'Mascotas', emoji: '🐾' },
 ];
 
 // Puntos urbanos aproximados; las distancias del endpoint son en línea recta.
@@ -55,9 +71,13 @@ const usuarios = [
 async function seed(prisma) {
   return prisma.$transaction(async (tx) => {
     const hobbyIds = new Map();
-    for (const nombre of hobbies) {
-      const hobbie = await tx.hobbie.upsert({ where: { nombre }, update: {}, create: { nombre } });
-      hobbyIds.set(nombre, hobbie.id);
+    for (const h of hobbies) {
+      const hobbie = await tx.hobbie.upsert({
+        where: { nombre: h.nombre },
+        update: { emoji: h.emoji },
+        create: { nombre: h.nombre, emoji: h.emoji },
+      });
+      hobbyIds.set(h.nombre, hobbie.id);
     }
 
     const tipoIds = new Map();

@@ -31,15 +31,6 @@ export default function StatsGrid({ stats, onSelectTab }) {
           <span className="stat-subtext">Ciudades registradas</span>
         </div>
       </div>
-
-      <div className="stat-card" onClick={() => onSelectTab('relaciones')}>
-        <div className="stat-icon-wrap match-bg">✨</div>
-        <div className="stat-details">
-          <span className="stat-label">Asignaciones</span>
-          <div className="stat-value">{stats.totalRelaciones}</div>
-          <span className="stat-subtext">Vínculos usuario-hobbie</span>
-        </div>
-      </div>
     </section>
   );
 }

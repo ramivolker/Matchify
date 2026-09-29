@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
+import { getHobbieEmoji } from '../../utils/hobbieUtils';
 
 export default function MiPerfilTab({
   currentUser,
@@ -300,7 +301,7 @@ export default function MiPerfilTab({
                   aria-pressed={isSelected}
                 >
                   <span className="hobby-chip-icon">{isSelected ? '✓' : '+'}</span>
-                  <span className="hobby-chip-name">{h.nombre}</span>
+                  <span className="hobby-chip-name">{getHobbieEmoji(h)} {h.nombre}</span>
                 </button>
               );
             })}

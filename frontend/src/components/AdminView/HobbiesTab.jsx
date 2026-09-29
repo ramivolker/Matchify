@@ -1,4 +1,5 @@
 import React from 'react';
+import { getHobbieEmoji } from '../../utils/hobbieUtils';
 
 export default function HobbiesTab({
   hobbies,
@@ -25,21 +26,20 @@ export default function HobbiesTab({
             <tr>
               <th>ID</th>
               <th>Nombre del Hobbie</th>
-              <th>Descripción</th>
               <th className="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="loading-cell">
+                <td colSpan="3" className="loading-cell">
                   <div className="spinner"></div>
                   <p>Cargando hobbies...</p>
                 </td>
               </tr>
             ) : hobbies.length === 0 ? (
               <tr>
-                <td colSpan="4">
+                <td colSpan="3">
                   <div className="empty-state">
                     <div className="empty-state-icon">🎨</div>
                     <h4>No hay hobbies cargados</h4>
@@ -57,14 +57,10 @@ export default function HobbiesTab({
                     <strong>#{h.id}</strong>
                   </td>
                   <td>
-                    <strong>🎨 {h.nombre}</strong>
-                  </td>
-                  <td>
-                    {h.descripcion ? (
-                      h.descripcion
-                    ) : (
-                      <span className="text-muted">Sin descripción</span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span style={{ fontSize: '1.3rem', lineHeight: 1 }}>{getHobbieEmoji(h)}</span>
+                      <strong style={{ fontSize: '0.92rem' }}>{h.nombre}</strong>
+                    </div>
                   </td>
                   <td className="text-right">
                     <div className="actions-group">

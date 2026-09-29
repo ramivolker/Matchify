@@ -97,16 +97,6 @@ export default function Sidebar({
               <span className="nav-label">Ubicaciones</span>
               <span className="counter-badge">{stats.totalUbicaciones}</span>
             </button>
-            <button
-              className={`nav-item ${currentAdminTab === 'relaciones' ? 'active' : ''}`}
-              onClick={() => {
-                setCurrentAdminTab('relaciones');
-                onClose();
-              }}
-            >
-              <span className="nav-icon">🔗</span>
-              <span className="nav-label">Asignar Hobbies</span>
-            </button>
           </nav>
         )}
 

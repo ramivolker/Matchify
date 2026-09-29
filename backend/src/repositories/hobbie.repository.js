@@ -2,7 +2,10 @@ const prisma = require("../config/prisma");
 
 const crear = async (datos) => {
   return prisma.hobbie.create({
-    data: datos,
+    data: {
+      nombre: datos.nombre,
+      emoji: datos.emoji ?? null,
+    },
   });
 };
 
@@ -19,7 +22,10 @@ const obtenerPorId = async (id) => {
 const actualizar = async (id, datos) => {
   return prisma.hobbie.update({
     where: { id },
-    data: datos,
+    data: {
+      nombre: datos.nombre,
+      emoji: datos.emoji ?? null,
+    },
   });
 };
 

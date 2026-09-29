@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getHobbieEmoji } from '../../utils/hobbieUtils';
 
 export default function TinderDeck({
   usuarios = [],
@@ -323,7 +324,7 @@ export default function TinderDeck({
                           key={h.id}
                           className={`tinder-chip ${isCommon ? 'match-chip' : ''}`}
                         >
-                          {isCommon ? '🔥' : '🎨'} {h.nombre}
+                          {isCommon ? '🔥' : getHobbieEmoji(h)} {h.nombre}
                         </span>
                       );
                     })
