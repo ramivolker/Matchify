@@ -1,4 +1,5 @@
 const ValidationError = require("../errors/validation-error");
+const MIN_AGE_GAP = 5;
 
 const validarUsuarioId = (usuarioId) => {
   if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
@@ -31,6 +32,10 @@ const validarPreferencia = (datos) => {
 
   if (edadMaxima < edadMinima) {
     throw new ValidationError("La edad máxima debe ser mayor o igual a la edad mínima");
+  }
+
+  if (edadMaxima - edadMinima < MIN_AGE_GAP) {
+    throw new ValidationError(`El rango de edad debe tener al menos ${MIN_AGE_GAP} años de diferencia`);
   }
 
   if (distanciaMaxKm !== undefined && (!Number.isInteger(distanciaMaxKm) || distanciaMaxKm <= 0)) {
