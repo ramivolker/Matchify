@@ -14,6 +14,7 @@ import ReportModal from './components/ReportModal';
 
 // Admin Components & Modals
 import StatsGrid from './components/AdminView/StatsGrid';
+import DevResetPanel from './components/AdminView/DevResetPanel';
 import UsuariosTab from './components/AdminView/UsuariosTab';
 import HobbiesTab from './components/AdminView/HobbiesTab';
 import UbicacionesTab from './components/AdminView/UbicacionesTab';
@@ -550,6 +551,20 @@ export default function App() {
             </header>
 
             {/* KPI Stats Cards */}
+            <DevResetPanel
+              usuarios={usuarios}
+              currentUserId={currentTinderUserId}
+              onShowToast={showToast}
+              onReset={() => {
+                setSeenByUser({});
+                setCandidatos([]);
+                setSessionMatches([]);
+                setCelebrationData(null);
+                setActiveChatUser(null);
+                setTinderError('');
+                setRefreshTinder((n) => n + 1);
+              }}
+            />
             <StatsGrid stats={stats} onSelectTab={(tab) => setCurrentAdminTab(tab)} />
 
             {/* Pestañas del Admin */}

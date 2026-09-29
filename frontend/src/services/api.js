@@ -35,6 +35,21 @@ const cleanUserPayload = (data) => {
 };
 
 export const api = {
+  async getResetHabilitado() {
+    const res = await fetch(`${API_BASE}/dev/interacciones`);
+    if (res.status === 403) return false;
+    if (!res.ok) throw new Error('No se pudo verificar la herramienta de desarrollo');
+    return (await res.json()).habilitado === true;
+  },
+
+  async resetearInteracciones(usuarioId) {
+    const path = usuarioId === undefined ? '/dev/interacciones' : `/dev/usuarios/${usuarioId}/interacciones`;
+    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al resetear interacciones');
+    return data;
+  },
+
   async getCandidatos(usuarioId) {
     const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/candidatos`);
     const data = await res.json();
