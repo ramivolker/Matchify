@@ -4,6 +4,11 @@ const { validarUsuarioId, validarPreferencia } = require("../validators/preferen
 const ValidationError = require("../errors/validation-error");
 const NotFoundError = require("../errors/not-found-error");
 
+const serializar = (preferencia) => ({
+  ...preferencia,
+  generos: (preferencia.generos ?? []).map(({ genero }) => genero),
+});
+
 const comprobarUsuario = async (usuarioId) => {
   const usuario = await usuarioRepository.obtenerPorId(usuarioId);
 
@@ -23,7 +28,7 @@ const crear = async (usuarioId, datos) => {
     throw new ValidationError("El usuario ya tiene una preferencia");
   }
 
-  return preferenciaRepository.crear({ ...datos, usuarioId });
+  return serializar(await preferenciaRepository.crear({ ...datos, usuarioId }));
 };
 
 const obtenerPorUsuarioId = async (usuarioId) => {
@@ -36,7 +41,7 @@ const obtenerPorUsuarioId = async (usuarioId) => {
     throw new NotFoundError("Preferencia no encontrada");
   }
 
-  return preferencia;
+  return serializar(preferencia);
 };
 
 const actualizar = async (usuarioId, datos) => {
@@ -44,7 +49,7 @@ const actualizar = async (usuarioId, datos) => {
   validarPreferencia(datos);
   await obtenerPorUsuarioId(usuarioId);
 
-  return preferenciaRepository.actualizar(usuarioId, datos);
+  return serializar(await preferenciaRepository.actualizar(usuarioId, datos));
 };
 
 const eliminar = async (usuarioId) => {

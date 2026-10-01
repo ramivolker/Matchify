@@ -1,4 +1,5 @@
 const ValidationError = require("../errors/validation-error");
+const { validarGenero } = require('./genero.validator');
 
 const validarId = (id) => {
   if (!Number.isInteger(id) || id <= 0) {
@@ -13,7 +14,7 @@ const validarUsuario = (datos) => {
 
   const camposPermitidos = [
     "nombre", "apellido", "email", "fechaNacimiento", "biografia",
-    "activo", "ubicacionId", "tipoUsuarioId",
+    "activo", "ubicacionId", "tipoUsuarioId", "genero",
   ];
 
   for (const campo of Object.keys(datos)) {
@@ -23,6 +24,7 @@ const validarUsuario = (datos) => {
   }
 
   const { nombre, apellido, email, fechaNacimiento, biografia, activo } = datos;
+  if (datos.genero !== undefined && datos.genero !== null) validarGenero(datos.genero);
 
   if (typeof nombre !== "string" || !nombre.trim()) {
     throw new ValidationError("El nombre es obligatorio");

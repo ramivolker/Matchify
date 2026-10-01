@@ -20,6 +20,7 @@ const cleanUserPayload = (data) => {
   }
 
   if (data.activo !== undefined) payload.activo = Boolean(data.activo);
+  if (data.genero !== undefined) payload.genero = data.genero;
 
   if (data.ubicacionId !== undefined && data.ubicacionId !== null && data.ubicacionId !== '') {
     payload.ubicacionId = parseInt(data.ubicacionId, 10);

@@ -1,4 +1,5 @@
 const ValidationError = require("../errors/validation-error");
+const { validarGeneros } = require('./genero.validator');
 const MIN_AGE_GAP = 5;
 
 const validarUsuarioId = (usuarioId) => {
@@ -12,7 +13,7 @@ const validarPreferencia = (datos) => {
     throw new ValidationError("Los datos de la preferencia son obligatorios");
   }
 
-  const camposPermitidos = ["edadMinima", "edadMaxima", "distanciaMaxKm"];
+  const camposPermitidos = ["edadMinima", "edadMaxima", "distanciaMaxKm", "generos"];
 
   for (const campo of Object.keys(datos)) {
     if (!camposPermitidos.includes(campo)) {
@@ -21,6 +22,7 @@ const validarPreferencia = (datos) => {
   }
 
   const { edadMinima, edadMaxima, distanciaMaxKm } = datos;
+  validarGeneros(datos.generos);
 
   if (!Number.isInteger(edadMinima) || edadMinima < 18) {
     throw new ValidationError("La edad mínima es obligatoria y debe ser un número entero mayor o igual a 18");
