@@ -135,6 +135,17 @@ export default function Sidebar({
               <span className="nav-icon">👤</span>
               <span className="nav-label">Mi Perfil</span>
             </button>
+
+            <button
+              className={`nav-item ${currentUserTab === 'bloqueados' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentUserTab('bloqueados');
+                onClose();
+              }}
+            >
+              <span className="nav-icon">🚫</span>
+              <span className="nav-label">Perfiles Bloqueados</span>
+            </button>
           </nav>
         )}
 
