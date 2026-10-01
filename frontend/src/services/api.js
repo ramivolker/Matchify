@@ -119,6 +119,42 @@ export const api = {
     return data;
   },
 
+  async getBloqueados(usuarioId) {
+    const res = await fetch(`${API_BASE}/bloqueos/usuario/${usuarioId}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        'Error al obtener perfiles bloqueados'
+      );
+    }
+
+    return data;
+  },
+
+  async desbloquearUsuario(usuarioBloqueadorId, usuarioBloqueadoId) {
+    const res = await fetch(
+      `${API_BASE}/bloqueos/${usuarioBloqueadorId}/${usuarioBloqueadoId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        'Error al desbloquear usuario'
+      );
+    }
+
+    return data;
+  },
+
   // Health
   async getHealth() {
     const res = await fetch(`${API_BASE}/health`);

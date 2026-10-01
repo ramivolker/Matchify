@@ -29,6 +29,7 @@ import TinderDeck from './components/TinderView/TinderDeck';
 import TinderMatches from './components/TinderView/TinderMatches';
 import MiPerfilTab from './components/TinderView/MiPerfilTab';
 import MatchCelebrationModal from './components/TinderView/MatchCelebrationModal';
+import BloqueadosTab from './components/TinderView/BloqueadosTab';
 import { TinderCardSkeleton } from './components/common/SkeletonLoader';
 
 export default function App() {
@@ -745,6 +746,21 @@ export default function App() {
                 onProfileUpdated={cargarTodo}
                 onPreferencesUpdated={() => setRefreshTinder((n) => n + 1)}
                 onShowToast={showToast}
+              />
+            )}
+
+            {/* Pestaña: Usuarios Bloqueados */}    
+            {currentUserTab === 'bloqueados' && (
+              <BloqueadosTab
+                currentUserId={currentTinderUserId}
+                onShowToast={showToast}
+                onUnblocked={(usuarioId) => {
+                  setBlockedUserIds((prev) =>
+                    prev.filter((id) => id !== usuarioId)
+                  );
+
+                  setRefreshTinder((n) => n + 1);
+                }}
               />
             )}
           </div>
