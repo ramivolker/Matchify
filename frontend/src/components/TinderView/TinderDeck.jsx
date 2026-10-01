@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
-import UserAvatar from '../common/UserAvatar';
+import { getUserAvatar } from '../../utils/userAvatarUtils';
 
 export default function TinderDeck({
   usuarios = [],
@@ -19,6 +19,7 @@ export default function TinderDeck({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [swipeAnimation, setSwipeAnimation] = useState('');
+  const [heroImgError, setHeroImgError] = useState(false);
   const actionLock = useRef(false);
   const startPosRef = useRef({ x: 0, y: 0 });
 
@@ -36,6 +37,7 @@ export default function TinderDeck({
     setDragOffset({ x: 0, y: 0 });
     setIsDragging(false);
     setSwipeAnimation('');
+    setHeroImgError(false);
   }, [activeProfile?.id]);
 
   const handleAction = async (direction) => {
@@ -152,7 +154,19 @@ export default function TinderDeck({
     ? activeProfile.hobbies.map((h) => h.hobbie || h)
     : [];
 
-  const commonCount = userHobbies.filter((h) => myHobbyIds.includes(h.id)).length;
+  const isCommonHobby = (hobbie) => myHobbyIds.includes(hobbie.id);
+
+  // Los hobbies en común se muestran primero (manteniendo el orden original dentro de cada grupo)
+  const sortedUserHobbies = [...userHobbies].sort(
+    (a, b) => Number(isCommonHobby(b)) - Number(isCommonHobby(a))
+  );
+
+  const commonCount = sortedUserHobbies.filter(isCommonHobby).length;
+
+  const avatarUrl = activeProfile ? getUserAvatar(activeProfile) : null;
+  const initials = activeProfile
+    ? `${activeProfile.nombre?.charAt(0) || 'U'}${activeProfile.apellido?.charAt(0) || ''}`.toUpperCase()
+    : '';
 
   // Touch edges to cycle photos
   const handleNextPhoto = (e) => {
@@ -181,16 +195,6 @@ export default function TinderDeck({
 
   return (
     <div className="tinder-deck-wrapper">
-      {/* Desktop Keyboard Shortcuts Helper Banner */}
-      <div className="keyboard-shortcuts-helper" aria-hidden="true">
-        <span>⌨️ Atajos:</span>
-        <span className="kbd-chip"><kbd>←</kbd> Descartar</span>
-        <span className="kbd-chip"><kbd>→</kbd> Me Gusta</span>
-        <span className="kbd-chip"><kbd>↑</kbd> Super Like</span>
-        <span className="kbd-chip"><kbd>Espacio</kbd> Ver Perfil</span>
-        <span className="kbd-chip"><kbd>R</kbd> Rebobinar</span>
-      </div>
-
       <div className="tinder-deck">
         {!deckQueue.length ? (
           <div className="tinder-empty-state">
@@ -244,15 +248,14 @@ export default function TinderDeck({
               </div>
             )}
 
-            {/* Photo Indicators Bar */}
-            <div className="photo-indicators-bar">
-              <span className={`photo-dot ${photoIndex === 0 ? 'active' : ''}`} />
-              <span className={`photo-dot ${photoIndex === 1 ? 'active' : ''}`} />
-              <span className={`photo-dot ${photoIndex === 2 ? 'active' : ''}`} />
-            </div>
+            {/* LEFT: Foto completa de la persona */}
+            <div className="tinder-photo-pane">
+              <div className="photo-indicators-bar">
+                <span className={`photo-dot ${photoIndex === 0 ? 'active' : ''}`} />
+                <span className={`photo-dot ${photoIndex === 1 ? 'active' : ''}`} />
+                <span className={`photo-dot ${photoIndex === 2 ? 'active' : ''}`} />
+              </div>
 
-            {/* Main Visual Hero */}
-            <div className="tinder-card-hero">
               {/* Photo edge tap zones */}
               <div className="photo-tap-edge tap-left" onClick={handlePrevPhoto} title="Foto anterior" />
               <div className="photo-tap-edge tap-right" onClick={handleNextPhoto} title="Siguiente foto" />
@@ -274,13 +277,17 @@ export default function TinderDeck({
                 ⚠️
               </button>
 
-              <div className="tinder-avatar-big-frame">
-                <UserAvatar
-                  user={activeProfile}
-                  size="hero"
-                  className="tinder-avatar-big"
+              {avatarUrl && !heroImgError ? (
+                <img
+                  className="tinder-photo-img"
+                  src={avatarUrl}
+                  alt={`${activeProfile.nombre} ${activeProfile.apellido}`}
+                  onError={() => setHeroImgError(true)}
+                  draggable={false}
                 />
-              </div>
+              ) : (
+                <div className="tinder-photo-initials">{initials}</div>
+              )}
 
               {commonCount > 0 && (
                 <div className="badge badge-success common-hobbies-badge">
@@ -289,9 +296,9 @@ export default function TinderDeck({
               )}
             </div>
 
-            {/* Card Body & Dark Gradient Text Area */}
-            <div className="tinder-card-body">
-              <div>
+            {/* RIGHT: Panel blanco con info, acciones y atajos */}
+            <div className="tinder-panel">
+              <div className="tinder-panel-info">
                 <div className="tinder-name-row">
                   <span className="tinder-name">
                     {activeProfile.nombre} {activeProfile.apellido}
@@ -317,13 +324,11 @@ export default function TinderDeck({
                 <p className="tinder-bio">
                   {activeProfile.biografia || 'Hola, estoy usando Matchify para conocer personas con mis mismos gustos y aficiones.'}
                 </p>
-              </div>
 
-              <div>
                 <div className="tinder-hobbies-chips">
-                  {userHobbies.length > 0 ? (
-                    userHobbies.map((h) => {
-                      const isCommon = myHobbyIds.includes(h.id);
+                  {sortedUserHobbies.length > 0 ? (
+                    sortedUserHobbies.map((h) => {
+                      const isCommon = isCommonHobby(h);
                       return (
                         <span
                           key={h.id}
@@ -340,56 +345,66 @@ export default function TinderDeck({
                   )}
                 </div>
               </div>
+
+              {/* Acciones principales */}
+              <div className="tinder-panel-actions">
+                <button
+                  disabled={pending || disabled}
+                  className="tinder-action-btn action-like"
+                  onClick={() => handleAction('right')}
+                  title="Dar Like"
+                >
+                  <span>💚</span> Me gusta
+                </button>
+                <button
+                  disabled={pending || disabled}
+                  className="tinder-action-btn action-dislike"
+                  onClick={() => handleAction('left')}
+                  title="Descartar (Dislike)"
+                >
+                  <span>✕</span> Descartar
+                </button>
+                <button
+                  disabled={pending || disabled}
+                  className="tinder-action-btn action-profile"
+                  onClick={() => onOpenDetail(activeProfile)}
+                  title="Ver perfil completo"
+                >
+                  <span>👤</span> Ver perfil completo
+                </button>
+
+                <div className="tinder-actions-secondary">
+                  <button
+                    disabled={pending || disabled}
+                    className="tinder-action-icon icon-superlike"
+                    onClick={() => handleAction('up')}
+                    title="Super Like (↑)"
+                  >
+                    <span>★</span>
+                  </button>
+                  <button
+                    disabled={pending || disabled}
+                    className="tinder-action-icon icon-rewind"
+                    onClick={handleRewind}
+                    title="Rebobinar (R)"
+                  >
+                    <span>🔄</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Atajos de teclado (gris claro) */}
+              <div className="tinder-panel-shortcuts" aria-hidden="true">
+                <span className="kbd-chip"><kbd>←</kbd> Descartar</span>
+                <span className="kbd-chip"><kbd>→</kbd> Me Gusta</span>
+                <span className="kbd-chip"><kbd>↑</kbd> Super Like</span>
+                <span className="kbd-chip"><kbd>Espacio</kbd> Ver Perfil</span>
+                <span className="kbd-chip"><kbd>R</kbd> Rebobinar</span>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Botones de Acción */}
-      {activeProfile && (
-        <div className="tinder-controls">
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-rewind"
-            onClick={handleRewind}
-            title="Buscar nuevos perfiles"
-          >
-            <span>🔄</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-dislike"
-            onClick={() => handleAction('left')}
-            title="Pasar (Dislike)"
-          >
-            <span>✕</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-superlike"
-            onClick={() => handleAction('up')}
-            title="Like (★)"
-          >
-            <span>★</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-like"
-            onClick={() => handleAction('right')}
-            title="Like"
-          >
-            <span>💚</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-info"
-            onClick={() => onOpenDetail(activeProfile)}
-            title="Ver información completa"
-          >
-            <span>ℹ️</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 }
