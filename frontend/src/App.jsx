@@ -227,6 +227,49 @@ export default function App() {
   // =========================================================================
   // AUTH HANDLERS
   // =========================================================================
+  const handleChangeTinderUser = (usuarioId) => {
+    const nuevoUsuario = usuarios.find(
+      (u) => u.id === usuarioId
+    );
+
+    if (!nuevoUsuario) return;
+
+    // Cambia el usuario activo de Tinder
+    setCurrentTinderUserId(usuarioId);
+
+    // Limpia estados pertenecientes al usuario anterior
+    setSessionMatches([]);
+    setCandidatos([]);
+    setSeenByUser({});
+    setActiveChatUser(null);
+    setCelebrationData(null);
+    setBlockedUserIds([]);
+    setTinderError('');
+
+    // También actualizamos la sesión
+    setSession((prev) => {
+      if (!prev) return prev;
+
+      const nuevaSession = {
+        ...prev,
+        nombre: nuevoUsuario.nombre,
+        apellido: nuevoUsuario.apellido,
+        email: nuevoUsuario.email,
+        user: nuevoUsuario,
+      };
+
+      localStorage.setItem(
+        'matchify_session',
+        JSON.stringify(nuevaSession)
+      );
+
+      return nuevaSession;
+    });
+
+    // Fuerza recarga de candidatos/matches
+    setRefreshTinder((n) => n + 1);
+  };
+  
   const handleLogin = (sessionData) => {
     const isAdm = sessionData?.role === 'admin';
     const safeSession = {
@@ -522,8 +565,8 @@ export default function App() {
 
   const isAdmin = session.role === 'admin';
   const currentLoggedInUser =
-    usuarios.find((u) => u.id === session?.user?.id) || session?.user;
-
+    usuarios.find((u) => u.id === currentTinderUserId) ||
+    session?.user;
   return (
     <div className="app-container">
       {/* Toast Notifications */}
@@ -650,7 +693,9 @@ export default function App() {
                   disabled={savingInteraction}
                   value={currentTinderUserId || ''}
                   onChange={(e) =>
-                    setCurrentTinderUserId(parseInt(e.target.value, 10))
+                    handleChangeTinderUser(
+                      parseInt(e.target.value, 10)
+                    )
                   }
                 >
                   {usuarios.map((u) => (
