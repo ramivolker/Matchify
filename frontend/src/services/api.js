@@ -77,10 +77,37 @@ export const api = {
     return data;
   },
 
-  async getMatches(usuarioId) {
-    const res = await fetch(`${API_BASE}/matches/${usuarioId}`);
+  async getMatches(usuarioId, { signal } = {}) {
+    const res = await fetch(`${API_BASE}/matches/${usuarioId}`, { signal });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || data.error || 'Error al obtener matches');
+    return data;
+  },
+
+  async getMensajes(matchId, usuarioId, { signal } = {}) {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/mensajes?usuarioId=${usuarioId}`, { signal });
+    const data = await res.json();
+    if (!res.ok) throw Object.assign(new Error(data.error || 'Error al cargar mensajes'), { status: res.status });
+    return data;
+  },
+
+  async enviarMensaje(matchId, emisorId, contenido) {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/mensajes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emisorId, contenido }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw Object.assign(new Error(data.error || 'No se pudo enviar el mensaje'), { status: res.status });
+    return data;
+  },
+
+  async marcarMensajesLeidos(matchId, usuarioId, hastaMensajeId, { signal } = {}) {
+    const res = await fetch(`${API_BASE}/matches/${matchId}/mensajes/leidos`, {
+      method: 'PATCH', signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuarioId, hastaMensajeId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw Object.assign(new Error(data.error || 'No se pudieron marcar los mensajes como leídos'), { status: res.status });
     return data;
   },
 

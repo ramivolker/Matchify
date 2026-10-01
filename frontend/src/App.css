@@ -2931,12 +2931,15 @@ body {
   display: flex;
   gap: 0.85rem;
   overflow-x: auto;
-  padding-bottom: 0.4rem;
+  /* El scroll horizontal recorta ambos ejes: reservar espacio para el aro y el hover. */
+  padding: 0.4rem;
+  margin: -0.4rem -0.4rem 0;
 }
 
 .new-match-avatar-pill {
   background: transparent;
   border: none;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3157,6 +3160,17 @@ body {
 .chat-header-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.chat-error {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  color: var(--danger, #bd2445);
+}
+
+.chat-bubble-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .chat-messages-scroll-area {
