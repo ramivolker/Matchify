@@ -1,74 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
+import useMatchMessages from '../../hooks/useMatchMessages';
 import UserAvatar from '../common/UserAvatar';
 
 export default function TinderMatches({
   matches,
+  currentUserId,
   onBackToExplore,
   onOpenDetail,
   onOpenReport,
-  onShowToast,
   activeChatUser,
   onSelectChatUser,
 }) {
-  // State for simulated chat messages keyed by match user ID
-  const [conversations, setConversations] = useState({});
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-
-  const currentChatUser = activeChatUser || null;
-  const currentMessages = currentChatUser ? (conversations[currentChatUser.id] || []) : [];
-
-  const handleSendMessage = (e) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim() || !currentChatUser) return;
-
-    const newMsg = {
-      id: Date.now(),
-      sender: 'me',
-      text: inputText.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'sent', // sent, delivered, read
-    };
-
-    const userKey = currentChatUser.id;
-    setConversations((prev) => ({
-      ...prev,
-      [userKey]: [...(prev[userKey] || []), newMsg],
-    }));
-
-    const textToSend = inputText.trim();
-    setInputText('');
-
-    // Simulate reply after 1.2s
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      let replyText = `¡Hola! Me alegro mucho de que hayamos conectado 😊`;
-      if (currentChatUser.commonHobbies && currentChatUser.commonHobbies.length > 0) {
-        replyText = `¡Totalmente! A mí también me encanta ${currentChatUser.commonHobbies[0].nombre}. ¿Sueles practicarlo seguido?`;
-      } else if (textToSend.toLowerCase().includes('hola') || textToSend.toLowerCase().includes('cómo estás')) {
-        replyText = `¡Hola! Todo genial por aquí, ¿y vos cómo andás?`;
-      }
-
-      const replyMsg = {
-        id: Date.now() + 1,
-        sender: 'them',
-        text: replyText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setConversations((prev) => ({
-        ...prev,
-        [userKey]: [...(prev[userKey] || []), replyMsg],
-      }));
-
-      if (navigator.vibrate) navigator.vibrate(15);
-    }, 1200);
-  };
-
-  const handleUseStarter = (starterText) => {
-    setInputText(starterText);
-  };
+  const currentChatUser = matches.find((match) => match.matchId === activeChatUser?.matchId) || null;
+  const chat = useMatchMessages(currentChatUser?.matchId, currentUserId);
+  const currentMessages = chat.messages;
+  const inputText = chat.input;
+  const setInputText = chat.setInput;
+  const handleSendMessage = chat.send;
+  const handleUseStarter = chat.setInput;
+  const formatTime = (date) => new Date(date).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+  });
 
   return (
     <div className="matches-chat-container">
@@ -105,15 +57,15 @@ export default function TinderMatches({
             <div className="new-matches-horizontal-list">
               {matches.map((m) => (
                 <button
-                  key={m.id}
+                  key={m.matchId}
                   type="button"
-                  className={`new-match-avatar-pill ${currentChatUser?.id === m.id ? 'active' : ''}`}
+                  className={`new-match-avatar-pill ${currentChatUser?.matchId === m.matchId ? 'active' : ''}`}
                   onClick={() => onSelectChatUser(m)}
                   title={`Conversar con ${m.nombre}`}
                 >
                   <div className="match-avatar-ring">
                     <UserAvatar user={m} size="sm" className="match-avatar-inner" />
-                    <span className="live-mini-dot" />
+
                   </div>
                   <span className="match-pill-name">{m.nombre}</span>
                 </button>
@@ -133,19 +85,18 @@ export default function TinderMatches({
           ) : (
             <div className="conversations-list">
               {matches.map((m) => {
-                const userMsgs = conversations[m.id] || [];
-                const lastMsg = userMsgs[userMsgs.length - 1];
-                const isSelected = currentChatUser?.id === m.id;
+                const lastMsg = m.ultimoMensaje;
+                const isSelected = currentChatUser?.matchId === m.matchId;
 
                 return (
                   <div
-                    key={m.id}
+                    key={m.matchId}
                     className={`conversation-item-row ${isSelected ? 'selected' : ''}`}
                     onClick={() => onSelectChatUser(m)}
                   >
                     <div className="conversation-avatar">
                       <UserAvatar user={m} size="md" className="conversation-avatar-inner" />
-                      <span className="live-mini-dot" />
+
                     </div>
 
                     <div className="conversation-content">
@@ -154,12 +105,13 @@ export default function TinderMatches({
                           {m.nombre} {m.apellido}
                         </span>
                         <span className="conversation-time">
-                          {lastMsg ? lastMsg.time : 'Nuevo'}
+                          {formatTime(lastMsg?.enviadoEn ?? m.fechaMatch)}
                         </span>
+                        {m.noLeidos > 0 && <span className="badge badge-tag" aria-label={`${m.noLeidos} mensajes sin leer`}>{m.noLeidos}</span>}
                       </div>
                       <p className="conversation-last-msg">
                         {lastMsg
-                          ? (lastMsg.sender === 'me' ? `Tú: ${lastMsg.text}` : lastMsg.text)
+                          ? (lastMsg.emisorId === currentUserId ? `Tú: ${lastMsg.contenido}` : lastMsg.contenido)
                           : '¡Has hecho match! Envía el primer mensaje.'}
                       </p>
                     </div>
@@ -209,14 +161,14 @@ export default function TinderMatches({
               >
                 <div className="chat-user-avatar">
                   <UserAvatar user={currentChatUser} size="md" className="chat-avatar-inner" />
-                  <span className="live-mini-dot" />
+
                 </div>
                 <div>
                   <div className="chat-user-name-title">
                     {currentChatUser.nombre} {currentChatUser.apellido}{' '}
                     <span className="chat-verified-check">✓</span>
                   </div>
-                  <span className="chat-online-status">● En línea ahora</span>
+                  <span className="chat-online-status">Match activo</span>
                 </div>
               </div>
 
@@ -240,7 +192,7 @@ export default function TinderMatches({
             </div>
 
             {/* Área de Mensajes */}
-            <div className="chat-messages-scroll-area">
+            <div className="chat-messages-scroll-area" ref={chat.scrollRef} aria-busy={chat.loading}>
               {/* Saludo inicial con Hobbies en Común */}
               <div className="chat-intro-banner">
                 <div className="chat-intro-avatar">
@@ -265,35 +217,28 @@ export default function TinderMatches({
                 )}
               </div>
 
+              {chat.loading && <p role="status">Cargando conversación…</p>}
               {/* Mensajes */}
               {currentMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`chat-bubble-row ${msg.sender === 'me' ? 'outgoing' : 'incoming'}`}
+                  className={`chat-bubble-row ${msg.emisorId === currentUserId ? 'outgoing' : 'incoming'}`}
                 >
                   <div className="chat-bubble">
-                    <p className="chat-bubble-text">{msg.text}</p>
+                    <p className="chat-bubble-text">{msg.contenido}</p>
                     <div className="chat-bubble-meta">
-                      <span className="chat-time">{msg.time}</span>
-                      {msg.sender === 'me' && <span className="chat-status-check">✓✓</span>}
+                      <span className="chat-time">{formatTime(msg.enviadoEn)}</span>
+                      {msg.emisorId === currentUserId && <span className="chat-status-check" aria-label={msg.leido ? 'Leído' : 'Enviado'}>{msg.leido ? '✓✓' : '✓'}</span>}
                     </div>
                   </div>
                 </div>
               ))}
 
-              {isTyping && (
-                <div className="chat-bubble-row incoming">
-                  <div className="chat-bubble typing-bubble">
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                  </div>
-                </div>
-              )}
+
             </div>
 
             {/* Conversation Starters Chips */}
-            {currentMessages.length === 0 && (
+            {!chat.loading && !chat.error && currentMessages.length === 0 && (
               <div className="chat-inline-starters">
                 <span className="starters-tip-title">Sugerencias para romper el hielo:</span>
                 <div className="starters-buttons-row">
@@ -329,19 +274,23 @@ export default function TinderMatches({
             )}
 
             {/* Formulario de Envío de Mensaje */}
+            {chat.error && <p className="chat-error" role="alert">{chat.error}</p>}
             <form className="chat-input-bar" onSubmit={handleSendMessage}>
               <input
                 type="text"
                 className="form-control chat-input"
                 placeholder={`Envía un mensaje a ${currentChatUser.nombre}...`}
                 value={inputText}
+                maxLength={1000}
+                aria-label="Mensaje"
+                disabled={chat.loading || chat.sending || chat.unavailable}
                 onChange={(e) => setInputText(e.target.value)}
                 autoFocus
               />
               <button
                 type="submit"
                 className="btn btn-primary chat-send-btn"
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || chat.loading || chat.sending || chat.unavailable}
                 title="Enviar mensaje (Enter)"
                 aria-label="Enviar mensaje"
               >
