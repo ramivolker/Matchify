@@ -3,15 +3,16 @@ const prisma = require("../config/prisma");
 const obtenerSolicitante = async (usuarioId) => {
   return prisma.usuario.findUnique({
     where: { id: usuarioId },
-    select: { id: true, preferencia: true, ubicacion: true },
+    select: { id: true, preferencia: { include: { generos: true } }, ubicacion: true },
   });
 };
 
-const obtenerCandidatos = async (usuarioId) => {
+const obtenerCandidatos = async (usuarioId, generos) => {
   return prisma.usuario.findMany({
     where: {
       id: { not: usuarioId },
       activo: true,
+      genero: { in: generos },
 
       interaccionesRecibidas: {
         none: { usuarioEmisorId: usuarioId },
@@ -36,6 +37,7 @@ const obtenerCandidatos = async (usuarioId) => {
       apellido: true,
       fechaNacimiento: true,
       biografia: true,
+      genero: true,
       ubicacion: true,
       tipoUsuario: true,
       hobbies: {

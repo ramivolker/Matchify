@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
+import { GENEROS, mismosGeneros } from '../../utils/generoUtils';
 
 const DISTANCE = { min: 10, max: 1000 };
 // Prisma requires a positive Int. This exceeds every terrestrial distance;
@@ -18,6 +19,7 @@ const percent = (value, { min, max }) => ((value - min) / (max - min)) * 100;
 const normalize = (data) => {
   const edadMinima = clamp(data?.edadMinima ?? 18, AGE.min, AGE.max - MIN_AGE_GAP);
   return {
+    generos: [...(data?.generos ?? [])],
     distanciaMaxKm: data?.distanciaMaxKm === UNLIMITED_DISTANCE
       ? UNLIMITED_DISTANCE
       : clamp(data?.distanciaMaxKm ?? 50, DISTANCE.min, DISTANCE.max),
@@ -179,6 +181,7 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
         distanciaMaxKm: data.distanciaMaxKm,
         edadMinima: data.edadMinima,
         edadMaxima: data.edadMaxima,
+        generos: [...(data.generos ?? [])],
       } : normalize(null);
       setPreferencia(data);
       setForm(next);
@@ -198,7 +201,8 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
   );
 
   const dirty = !!form && !!baseline && (
-    Object.keys(baseline).some((key) => form[key] !== baseline[key]) ||
+    Object.keys(baseline).some((key) => key === 'generos'
+      ? !mismosGeneros(form.generos, baseline.generos) : form[key] !== baseline[key]) ||
     Object.values(draftChanges).some(Boolean)
   );
 
@@ -211,7 +215,7 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
 
   const save = async (event) => {
     event.preventDefault();
-    if (saving || !dirty || invalidAgeRange) return;
+    if (saving || !dirty || invalidAgeRange || form.generos.length === 0) return;
     setSaving(true);
     try {
       const saved = await api.guardarPreferencia(usuarioId, normalize(form), preferencia !== null);
@@ -231,9 +235,9 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
 
   const update = (key, value) => setForm((previous) => ({ ...previous, [key]: value }));
   return (
-    <section className="preferences-panel" aria-labelledby="preferencias-title" aria-busy={loading || saving}>
+    <section className="profile-section-card preferences-panel" aria-labelledby="preferencias-title" aria-busy={loading || saving}>
       <h3 id="preferencias-title">Preferencias de búsqueda</h3>
-      <p className="preferences-subtitle">Elegí la distancia y el rango de edad de los perfiles que querés conocer.</p>
+      <p className="preferences-subtitle">Elegí la distancia, el rango de edad y los géneros de los perfiles que querés conocer.</p>
       {loading ? <p role="status">Cargando preferencias…</p> : error ? (
         <div role="alert">
           {error}{' '}
@@ -263,10 +267,30 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
               </div>
             ) : <AgeRangeControl min={form.edadMinima} max={form.edadMaxima}
               onMinChange={(value) => update('edadMinima', value)} onMaxChange={(value) => update('edadMaxima', value)} />}
+            <div className="preferences-control" role="group" aria-labelledby="preferencias-generos">
+              <h4 className="preferences-label" id="preferencias-generos">Géneros que me interesan</h4>
+              <div className="preferences-gender-chips">
+                {GENEROS.map(({ value, label }) => {
+                  const selected = form.generos.includes(value);
+                  return <button key={value} type="button" aria-pressed={selected}
+                    className={`hobby-select-chip ${selected ? 'selected' : ''}`}
+                    onClick={() => update('generos', selected
+                      ? form.generos.filter((genero) => genero !== value) : [...form.generos, value])}>
+                    <span aria-hidden="true">{selected ? '✓' : '+'}</span> {label}
+                  </button>;
+                })}
+                <button type="button" aria-pressed={form.generos.length === GENEROS.length}
+                  className={`hobby-select-chip ${form.generos.length === GENEROS.length ? 'selected' : ''}`}
+                  onClick={() => update('generos', GENEROS.map(({ value }) => value))}>
+                  {form.generos.length === GENEROS.length && <span aria-hidden="true">✓ </span>}Todos
+                </button>
+              </div>
+              {form.generos.length === 0 && <p className="preferences-notice" role="status">Seleccioná al menos un género para guardar y buscar candidatos.</p>}
+            </div>
             <div className="preferences-actions">
               <span className="preferences-pending" role="status">{dirty ? 'Cambios sin guardar' : ''}</span>
               {dirty && <button type="button" className="btn btn-secondary preferences-cancel" onClick={cancel}>Cancelar</button>}
-              <button type="submit" className="btn preferences-save" disabled={!dirty || saving || invalidAgeRange}>{saving ? 'Guardando…' : 'Guardar preferencias'}</button>
+              <button type="submit" className="btn preferences-save" disabled={!dirty || saving || invalidAgeRange || form.generos.length === 0}>{saving ? 'Guardando…' : 'Guardar preferencias'}</button>
             </div>
           </fieldset>
         </form>

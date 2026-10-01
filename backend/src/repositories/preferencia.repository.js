@@ -1,17 +1,24 @@
 const prisma = require("../config/prisma");
 
 const crear = async (datos) => {
-  return prisma.preferencia.create({ data: datos });
+  const { generos, ...campos } = datos;
+  return prisma.preferencia.create({
+    data: { ...campos, generos: { create: generos.map((genero) => ({ genero })) } },
+    include: { generos: true },
+  });
 };
 
 const obtenerPorUsuarioId = async (usuarioId) => {
-  return prisma.preferencia.findUnique({ where: { usuarioId } });
+  return prisma.preferencia.findUnique({ where: { usuarioId }, include: { generos: true } });
 };
 
 const actualizar = async (usuarioId, datos) => {
+  const { generos, ...campos } = datos;
   return prisma.preferencia.update({
     where: { usuarioId },
-    data: datos,
+    // La escritura anidada reemplaza la selección en una única transacción.
+    data: { ...campos, generos: { deleteMany: {}, create: generos.map((genero) => ({ genero })) } },
+    include: { generos: true },
   });
 };
 

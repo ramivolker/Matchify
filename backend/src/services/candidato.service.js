@@ -46,11 +46,16 @@ const obtenerCandidatos = async (usuarioId) => {
     throw new ValidationError("El usuario debe configurar una preferencia para buscar candidatos");
   }
 
+  const generos = (solicitante.preferencia.generos ?? []).map(({ genero }) => genero);
+  if (generos.length === 0) {
+    throw new ValidationError('Seleccioná al menos un género en tus preferencias de búsqueda');
+  }
+
   if (!tieneCoordenadasValidas(solicitante.ubicacion)) {
     throw new ValidationError("El usuario debe tener una ubicación con coordenadas válidas");
   }
 
-  const usuarios = await candidatoRepository.obtenerCandidatos(usuarioId);
+  const usuarios = await candidatoRepository.obtenerCandidatos(usuarioId, generos);
   const { edadMinima, edadMaxima, distanciaMaxKm } = solicitante.preferencia;
   const hoy = new Date();
   const candidatos = [];
@@ -70,6 +75,7 @@ const obtenerCandidatos = async (usuarioId) => {
       apellido: usuario.apellido,
       fechaNacimiento: usuario.fechaNacimiento,
       biografia: usuario.biografia,
+      genero: usuario.genero,
       ubicacion: usuario.ubicacion,
       tipoUsuario: usuario.tipoUsuario,
       hobbies: usuario.hobbies.map((asociacion) => asociacion.hobbie),

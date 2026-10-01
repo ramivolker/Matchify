@@ -5,6 +5,7 @@ import { getHobbieEmoji } from '../../utils/hobbieUtils';
 import { getUserAvatar } from '../../utils/userAvatarUtils';
 import UserAvatar from '../common/UserAvatar';
 import AvatarPickerModal from './AvatarPickerModal';
+import { GENEROS } from '../../utils/generoUtils';
 
 // Categorización inteligente de hobbies
 export const HOBBIE_CATEGORIES = [
@@ -58,6 +59,7 @@ export default function MiPerfilTab({
   const [apellido, setApellido] = useState(currentUser?.apellido || '');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [biografia, setBiografia] = useState(currentUser?.biografia ?? '');
+  const [genero, setGenero] = useState(currentUser?.genero ?? '');
   const [ubicacionId, setUbicacionId] = useState(currentUser?.ubicacionId || '');
 
   // Assigned hobbies with local optimistic state
@@ -80,6 +82,10 @@ export default function MiPerfilTab({
   useEffect(() => {
     setBiografia(currentUser?.biografia ?? '');
   }, [currentUser?.id, currentUser?.biografia]);
+
+  useEffect(() => {
+    setGenero(currentUser?.genero ?? '');
+  }, [currentUser?.id, currentUser?.genero, isEditing]);
 
   // Calculate Profile Completeness Percentage
   let completionScore = 0;
@@ -165,6 +171,7 @@ export default function MiPerfilTab({
         email: email.trim(),
         fechaNacimiento: currentUser?.fechaNacimiento || '2000-01-01',
         biografia: biografia.trim(),
+        genero: genero || null,
         ubicacionId: ubicacionId ? parseInt(ubicacionId, 10) : null,
         activo: currentUser?.activo !== false,
       });
@@ -180,7 +187,7 @@ export default function MiPerfilTab({
 
   return (
     <div className="profile-tab-wrapper">
-      <div className="card profile-tab-card">
+      <div className="profile-section-card">
         {/* Barra de Progreso de Completitud del Perfil (Onboarding progresivo) */}
         {completionScore < 100 && (
           <div className="profile-completeness-banner">
@@ -229,7 +236,7 @@ export default function MiPerfilTab({
               title="Cambiar foto de perfil"
               aria-label="Cambiar foto de perfil"
             >
-              📷
+              <span className="avatar-edit-badge-icon" aria-hidden="true">📷</span>
             </button>
           </div>
 
@@ -318,6 +325,15 @@ export default function MiPerfilTab({
             </div>
 
             <div className="form-group">
+              <label htmlFor="perfil-genero">Género</label>
+              <select id="perfil-genero" className="form-control" value={genero}
+                onChange={(event) => setGenero(event.target.value)} disabled={loading}>
+                <option value="">Sin especificar</option>
+                {GENEROS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Biografía / Presentación</label>
               <textarea
                 className="form-control"
@@ -351,13 +367,15 @@ export default function MiPerfilTab({
           </div>
         )}
 
+      </div>
+
         {currentUser?.id && (
           <PreferenciasSection key={currentUser.id} usuarioId={currentUser.id}
             onSaved={onPreferencesUpdated} onShowToast={onShowToast} />
         )}
 
         {/* SECCIÓN DE HOBBIES DEL USUARIO */}
-        <div className="profile-hobbies-section">
+        <div className="profile-section-card profile-hobbies-section">
           <div className="section-header-flex">
             <div>
               <h3 className="section-title">🎨 Tus hobbies</h3>
@@ -457,8 +475,6 @@ export default function MiPerfilTab({
             </div>
           )}
         </div>
-      </div>
-
       {/* Modal para cambiar foto de perfil o avatar */}
       <AvatarPickerModal
         currentUser={currentUser}

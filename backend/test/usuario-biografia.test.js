@@ -53,6 +53,7 @@ test('biografía: API cliente, PUT, nueva lectura y completitud del perfil', asy
     bundle: true, platform: 'node', format: 'cjs', write: false,
   });
   const compiled = new Module(path.join(frontend, 'profile-test.cjs'), module);
+  compiled.filename = path.join(frontend, 'profile-test.cjs');
   compiled.paths = Module._nodeModulePaths(frontend);
   compiled._compile(bundle.outputFiles[0].text, compiled.filename);
   const { render } = compiled.exports;
@@ -119,4 +120,20 @@ test('biografía: API cliente, PUT, nueva lectura y completitud del perfil', asy
       assert.equal(stored.biografia.length, 500);
     }
   });
+  await t.test('género propio: guardar, releer, omitir y rechazar valores inválidos', async () => {
+    reset();
+    for (const genero of ['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'OTRO', null]) {
+      assert.equal((await api.actualizarUsuario(1, { ...fields, genero })).genero, genero);
+      assert.equal((await (await fetch('/api/usuarios/1')).json()).genero, genero);
+    }
+    await api.actualizarUsuario(1, { ...fields, genero: 'NO_BINARIO' });
+    await api.actualizarUsuario(1, fields);
+    assert.equal(stored.genero, 'NO_BINARIO');
+    for (const genero of ['TODOS', '', 'femenino', [], {}, 123]) {
+      const res = await fetch('/api/usuarios/1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fields, genero }) });
+      assert.equal(res.status, 400);
+      assert.equal(stored.genero, 'NO_BINARIO');
+    }
+  });
+
 });

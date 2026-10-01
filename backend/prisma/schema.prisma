@@ -12,6 +12,13 @@ enum TipoInteraccion {
   DISLIKE
 }
 
+enum Genero {
+  MASCULINO
+  FEMENINO
+  NO_BINARIO
+  OTRO
+}
+
 model Usuario {
   id              Int      @id @default(autoincrement())
   nombre          String
@@ -19,6 +26,7 @@ model Usuario {
   email           String   @unique
   fechaNacimiento DateTime
   biografia       String?  @db.VarChar(500)
+  genero          Genero?
   activo          Boolean  @default(true)
   creadoEn        DateTime @default(now())
   actualizadoEn   DateTime @updatedAt
@@ -80,6 +88,16 @@ model Preferencia {
   edadMaxima     Int
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  generos PreferenciaGenero[]
+}
+
+model PreferenciaGenero {
+  preferenciaId Int
+  genero Genero
+
+  preferencia Preferencia @relation(fields: [preferenciaId], references: [id], onDelete: Cascade)
+
+  @@id([preferenciaId, genero])
 }
 
 model TipoUsuario {
