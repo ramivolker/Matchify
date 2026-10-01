@@ -32,6 +32,7 @@ app.use("/api/tipos-usuario", tipoUsuarioRoutes);
 app.use("/api/usuarios", candidatoRoutes);
 app.use("/api/interacciones", interaccionRoutes);
 app.use("/api/matches", matchRoutes);
+app.use('/api/matches', require('./routes/mensaje.routes'));
 app.use("/api/bloqueos", bloqueoRoutes);
 app.get("/api/health", (req, res) => {
   res.status(200).json({

@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 async function crearMatch(usuarioAId, usuarioBId) {
   const usuario1Id = Math.min(usuarioAId, usuarioBId);
@@ -26,6 +24,8 @@ async function obtenerMatchesPorUsuario(usuarioId) {
     include: {
       usuario1: true,
       usuario2: true,
+      mensajes: { take: 1, orderBy: [{ enviadoEn: 'desc' }, { id: 'desc' }] },
+      _count: { select: { mensajes: { where: { leido: false, emisorId: { not: usuarioId } } } } },
     },
   });
 }

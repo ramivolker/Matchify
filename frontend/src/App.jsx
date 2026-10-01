@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { api } from './services/api';
+import { matchToProfile } from './utils/matchUtils';
 
 // Auth Screen
 import AuthView from './components/AuthView';
@@ -106,10 +107,7 @@ export default function App() {
       if (cancelled) return;
       if (candidateResult.status === 'fulfilled') setCandidatos(candidateResult.value);
       if (matchResult.status === 'fulfilled') {
-        setSessionMatches(matchResult.value.map((match) => {
-          const other = match.usuario1Id === currentTinderUserId ? match.usuario2 : match.usuario1;
-          return { ...usuarios.find((u) => u.id === other.id), ...other };
-        }));
+        setSessionMatches(matchResult.value.map((match) => matchToProfile(match, currentTinderUserId, usuarios)));
       }
       const errors = [candidateResult, matchResult]
         .filter((result) => result.status === 'rejected')
@@ -119,6 +117,26 @@ export default function App() {
     });
     return () => { cancelled = true; };
   }, [currentTinderUserId, session?.role, currentUserTab, refreshTinder, usuarios]);
+
+  // Actualizar previews y no leídos sin desmontar el chat ni activar el loader global.
+  useEffect(() => {
+    if (!currentTinderUserId || session?.role !== 'user' || currentUserTab !== 'matches') return;
+    const controller = new AbortController();
+    let cancelled = false;
+    let timer;
+    const refresh = async () => {
+      try {
+        const result = await api.getMatches(currentTinderUserId, { signal: controller.signal });
+        if (!cancelled) setSessionMatches(result.map((match) => matchToProfile(match, currentTinderUserId, usuarios)));
+      } catch (error) {
+        if (!cancelled && error.name !== 'AbortError') setTinderError(error.message);
+      } finally {
+        if (!cancelled) timer = setTimeout(refresh, 2500);
+      }
+    };
+    timer = setTimeout(refresh, 2500);
+    return () => { cancelled = true; clearTimeout(timer); controller.abort(); };
+  }, [currentTinderUserId, session?.role, currentUserTab, usuarios]);
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -509,8 +527,10 @@ export default function App() {
         const myHobbyIds = (currentUser?.hobbies || []).map((h) => (h.hobbie || h).id || h.hobbieId);
         const commonHobbies = (swipedUser.hobbies || []).map((h) => h.hobbie || h)
           .filter((h) => myHobbyIds.includes(h.id));
-        setSessionMatches((prev) => prev.some((u) => u.id === swipedUser.id) ? prev : [...prev, swipedUser]);
-        setCelebrationData({ currentUser, matchedUser: swipedUser, commonHobbies });
+        const matchedUser = { ...swipedUser, commonHobbies, matchId: result.match.id,
+          fechaMatch: result.match.fecha, ultimoMensaje: null, noLeidos: 0 };
+        setSessionMatches((prev) => prev.some((u) => u.id === swipedUser.id) ? prev : [...prev, matchedUser]);
+        setCelebrationData({ currentUser, matchedUser, commonHobbies });
       } else {
         showToast(tipo === 'LIKE' ? `Le diste like a ${swipedUser.nombre} 👍` : `Pasaste el perfil de ${swipedUser.nombre}`, 'success');
       }
@@ -750,7 +770,7 @@ export default function App() {
                   (u) => u.id === currentTinderUserId
                 )}
                 onSwipe={handleTinderSwipe}
-                onRewind={() =>
+                onRefresh={() =>
                   setRefreshTinder((n) => n + 1)
                 }
                 onOpenDetail={(u) =>
@@ -767,6 +787,8 @@ export default function App() {
             {/* Pestaña: Mis Matches & Chat Split View */}
             {currentUserTab === 'matches' && !tinderLoading && (
               <TinderMatches
+                key={currentTinderUserId}
+                currentUserId={currentTinderUserId}
                 matches={sessionMatches}
                 onBackToExplore={() => setCurrentUserTab('swipe')}
                 onOpenDetail={(u) =>

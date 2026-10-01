@@ -9,19 +9,19 @@ export default function TinderDeck({
   currentUserId,
   currentUser: currentUserProp,
   onSwipe,
-  onRewind,
+  onRefresh,
   onOpenDetail,
   onOpenReport,
   blockedUserIds = [],
 }) {
   const [pending, setPending] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [swipeAnimation, setSwipeAnimation] = useState('');
   const [heroImgError, setHeroImgError] = useState(false);
   const actionLock = useRef(false);
-  const startPosRef = useRef({ x: 0, y: 0 });
+  const startXRef = useRef(0);
 
   const deckQueue = candidatos;
 
@@ -34,7 +34,7 @@ export default function TinderDeck({
   // Reset photo index and drag state on profile change
   useEffect(() => {
     setPhotoIndex(0);
-    setDragOffset({ x: 0, y: 0 });
+    setDragX(0);
     setIsDragging(false);
     setSwipeAnimation('');
     setHeroImgError(false);
@@ -47,25 +47,15 @@ export default function TinderDeck({
     setSwipeAnimation(direction);
 
     // Haptic feedback
-    if (navigator.vibrate) {
-      if (direction === 'up') navigator.vibrate([20, 30, 20]);
-      else navigator.vibrate(20);
-    }
+    if (navigator.vibrate) navigator.vibrate(20);
 
     try {
       await onSwipe(activeProfile, direction);
     } finally {
       setSwipeAnimation('');
-      setDragOffset({ x: 0, y: 0 });
+      setDragX(0);
       actionLock.current = false;
       setPending(false);
-    }
-  };
-
-  const handleRewind = () => {
-    if (!pending && !disabled) {
-      if (navigator.vibrate) navigator.vibrate(15);
-      onRewind();
     }
   };
 
@@ -81,15 +71,9 @@ export default function TinderDeck({
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handleAction('left');
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        handleAction('up');
       } else if (e.code === 'Space') {
         e.preventDefault();
         onOpenDetail(activeProfile);
-      } else if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        handleRewind();
       }
     };
 
@@ -100,17 +84,13 @@ export default function TinderDeck({
   // Touch handlers for mobile fluid swipe
   const handleTouchStart = (e) => {
     if (!activeProfile || pending || disabled) return;
-    const touch = e.touches[0];
-    startPosRef.current = { x: touch.clientX, y: touch.clientY };
+    startXRef.current = e.touches[0].clientX;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e) => {
     if (!isDragging || !activeProfile) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPosRef.current.x;
-    const deltaY = touch.clientY - startPosRef.current.y;
-    setDragOffset({ x: deltaX, y: deltaY });
+    setDragX(e.touches[0].clientX - startXRef.current);
   };
 
   const handleTouchEnd = () => {
@@ -118,16 +98,13 @@ export default function TinderDeck({
     setIsDragging(false);
 
     const thresholdX = 90;
-    const thresholdY = -100;
 
-    if (dragOffset.x > thresholdX) {
+    if (dragX > thresholdX) {
       handleAction('right');
-    } else if (dragOffset.x < -thresholdX) {
+    } else if (dragX < -thresholdX) {
       handleAction('left');
-    } else if (dragOffset.y < thresholdY) {
-      handleAction('up');
     } else {
-      setDragOffset({ x: 0, y: 0 });
+      setDragX(0);
     }
   };
 
@@ -180,18 +157,17 @@ export default function TinderDeck({
   };
 
   // Dynamic card drag styles
-  const cardRotation = dragOffset.x * 0.08;
+  const cardRotation = dragX * 0.08;
   const dynamicCardStyle = isDragging
     ? {
-        transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${cardRotation}deg)`,
+        transform: `translate3d(${dragX}px, 0, 0) rotate(${cardRotation}deg)`,
         transition: 'none',
       }
     : undefined;
 
   // Swipe Stamp opacity
-  const likeStampOpacity = Math.min(Math.max(dragOffset.x / 80, 0), 1);
-  const nopeStampOpacity = Math.min(Math.max(-dragOffset.x / 80, 0), 1);
-  const superStampOpacity = Math.min(Math.max(-dragOffset.y / 80, 0), 1);
+  const likeStampOpacity = Math.min(Math.max(dragX / 80, 0), 1);
+  const nopeStampOpacity = Math.min(Math.max(-dragX / 80, 0), 1);
 
   return (
     <div className="tinder-deck-wrapper">
@@ -214,9 +190,9 @@ export default function TinderDeck({
             <h4>¡Te pusiste al día!</h4>
             <p>Has explorado todos los perfiles cercanos por el momento.</p>
             <button
-            disabled={pending || disabled}
+              disabled={pending || disabled}
               className="btn btn-primary btn-sm"
-              onClick={handleRewind}
+              onClick={onRefresh}
               style={{ marginTop: '1rem' }}
             >
               🔄 Buscar nuevos perfiles
@@ -240,11 +216,6 @@ export default function TinderDeck({
             {nopeStampOpacity > 0.1 && (
               <div className="swipe-stamp stamp-nope" style={{ opacity: nopeStampOpacity }}>
                 NOPE
-              </div>
-            )}
-            {superStampOpacity > 0.1 && (
-              <div className="swipe-stamp stamp-super" style={{ opacity: superStampOpacity }}>
-                SUPER LIKE
               </div>
             )}
 
@@ -372,34 +343,13 @@ export default function TinderDeck({
                 >
                   <span>👤</span> Ver perfil completo
                 </button>
-
-                <div className="tinder-actions-secondary">
-                  <button
-                    disabled={pending || disabled}
-                    className="tinder-action-icon icon-superlike"
-                    onClick={() => handleAction('up')}
-                    title="Super Like (↑)"
-                  >
-                    <span>★</span>
-                  </button>
-                  <button
-                    disabled={pending || disabled}
-                    className="tinder-action-icon icon-rewind"
-                    onClick={handleRewind}
-                    title="Rebobinar (R)"
-                  >
-                    <span>🔄</span>
-                  </button>
-                </div>
               </div>
 
               {/* Atajos de teclado (gris claro) */}
               <div className="tinder-panel-shortcuts" aria-hidden="true">
                 <span className="kbd-chip"><kbd>←</kbd> Descartar</span>
                 <span className="kbd-chip"><kbd>→</kbd> Me Gusta</span>
-                <span className="kbd-chip"><kbd>↑</kbd> Super Like</span>
                 <span className="kbd-chip"><kbd>Espacio</kbd> Ver Perfil</span>
-                <span className="kbd-chip"><kbd>R</kbd> Rebobinar</span>
               </div>
             </div>
           </div>
