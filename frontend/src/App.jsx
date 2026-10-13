@@ -774,6 +774,9 @@ export default function App() {
                 onPass={(profile) =>
                   setCandidatos((queue) => passCandidate(queue, profile.id))
                 }
+                onRefresh={() =>
+                  setRefreshTinder((n) => n + 1)
+                }
                 onOpenDetail={(u) =>
                   setDetailModal({
                     open: true,

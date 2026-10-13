@@ -1033,10 +1033,6 @@ body {
   transform: scale(1.04);
 }
 
-/* Swipe Animations */
-
-
-/* Action buttons */
 
 /* Radar Empty State */
 
@@ -1560,6 +1556,7 @@ body {
   .grid-2-cols {
     grid-template-columns: 1fr;
   }
+
 }
 
 /* ==========================================================================
@@ -2317,7 +2314,6 @@ body {
 
 [data-theme="dark"] .tinder-top-bar,
 [data-theme="dark"] .tinder-card,
-[data-theme="dark"] .tinder-card-body,
 [data-theme="dark"] .tinder-empty-state,
 [data-theme="dark"] .matches-sidebar-panel,
 [data-theme="dark"] .chat-active-panel,
@@ -2354,10 +2350,19 @@ body {
 }
 
 [data-theme="dark"] .tinder-chip.match-chip {
-  background: rgba(255, 42, 109, 0.2);
-  color: #FF2A6D;
-  border-color: rgba(255, 42, 109, 0.45);
-  box-shadow: 0 0 12px rgba(255, 42, 109, 0.35);
+  background: linear-gradient(135deg, #FF2A6D, #FF5B8D);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 18px rgba(255, 42, 109, 0.45);
+}
+
+[data-theme="dark"] .tinder-name {
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .tinder-age,
+[data-theme="dark"] .tinder-location {
+  color: #A0A5B1;
 }
 
 [data-theme="dark"] .profile-bio-text,
@@ -2386,8 +2391,7 @@ body {
   gap: 0.35rem;
 }
 
-.kbd-chip kbd,
-.kbd-shortcut-tag {
+.kbd-chip kbd {
   background: var(--card-bg);
   border: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -2397,26 +2401,6 @@ body {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-dark);
-}
-
-.control-btn-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.kbd-shortcut-tag {
-  font-size: 0.65rem;
-  padding: 0 4px;
-  opacity: 0.8;
-}
-
-@media (max-width: 767px) {
-  .keyboard-shortcuts-helper,
-  .kbd-shortcut-tag {
-    display: none;
-  }
 }
 
 /* ==========================================================================
@@ -3499,8 +3483,6 @@ body {
   box-shadow: 0 10px 30px rgba(255, 42, 109, 0.35);
 }
 
-/* Hero Avatar en Tinder Deck */
-
 /* Avatar en Header de Perfil */
 .profile-banner-avatar-wrapper {
   position: relative;
@@ -3808,9 +3790,6 @@ body {
   display: flex;
   gap: 0.5rem;
 }
-
-
-
 
 /* Search preferences: scoped controls shared by the distance and age fields. */
 .preferences-panel {
@@ -4197,6 +4176,7 @@ body {
   .preferences-pending {
     flex-basis: 100%;
   }
+
 }
 @media (max-width: 380px) {
   .preferences-distance-row {

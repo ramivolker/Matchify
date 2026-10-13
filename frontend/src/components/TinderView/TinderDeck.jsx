@@ -11,16 +11,17 @@ export default function TinderDeck({
   currentUser: currentUserProp,
   onSwipe,
   onPass,
+  onRefresh,
   onOpenDetail,
   onOpenReport,
   blockedUserIds = [],
 }) {
   const [pending, setPending] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [swipeAnimation, setSwipeAnimation] = useState('');
   const actionLock = useRef(false);
-  const startPosRef = useRef({ x: 0, y: 0 });
+  const startXRef = useRef(0);
 
   const deckQueue = candidatos;
 
@@ -32,7 +33,7 @@ export default function TinderDeck({
 
   // Reset drag state on profile change
   useEffect(() => {
-    setDragOffset({ x: 0, y: 0 });
+    setDragX(0);
     setIsDragging(false);
     setSwipeAnimation('');
   }, [activeProfile?.id]);
@@ -52,7 +53,7 @@ export default function TinderDeck({
       await onSwipe(activeProfile, direction);
     } finally {
       setSwipeAnimation('');
-      setDragOffset({ x: 0, y: 0 });
+      setDragX(0);
       actionLock.current = false;
       setPending(false);
     }
@@ -86,21 +87,18 @@ export default function TinderDeck({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeProfile, pending, disabled, candidatos, onPass]);
+  }, [activeProfile, pending, disabled, candidatos, onPass, onSwipe, onOpenDetail]);
 
   // Touch handlers for mobile fluid swipe
   const handleTouchStart = (e) => {
     if (!activeProfile || pending || disabled) return;
-    const touch = e.touches[0];
-    startPosRef.current = { x: touch.clientX, y: touch.clientY };
+    startXRef.current = e.touches[0].clientX;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e) => {
     if (!isDragging || !activeProfile) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPosRef.current.x;
-    setDragOffset({ x: deltaX, y: 0 });
+    setDragX(e.touches[0].clientX - startXRef.current);
   };
 
   const handleTouchEnd = () => {
@@ -109,12 +107,12 @@ export default function TinderDeck({
 
     const thresholdX = 90;
 
-    if (dragOffset.x > thresholdX) {
+    if (dragX > thresholdX) {
       handleAction('right');
-    } else if (dragOffset.x < -thresholdX) {
+    } else if (dragX < -thresholdX) {
       handleAction('left');
     } else {
-      setDragOffset({ x: 0, y: 0 });
+      setDragX(0);
     }
   };
 
@@ -141,24 +139,31 @@ export default function TinderDeck({
     ? activeProfile.hobbies.map((h) => h.hobbie || h)
     : [];
 
-  const commonCount = userHobbies.filter((h) => myHobbyIds.includes(h.id)).length;
+  const isCommonHobby = (hobbie) => myHobbyIds.includes(hobbie.id);
+
+  // Los hobbies en común se muestran primero (manteniendo el orden original dentro de cada grupo)
+  const sortedUserHobbies = [...userHobbies].sort(
+    (a, b) => Number(isCommonHobby(b)) - Number(isCommonHobby(a))
+  );
+
+  const commonCount = sortedUserHobbies.filter(isCommonHobby).length;
 
   const generoLabel = GENEROS.find(({ value }) => value === activeProfile?.genero)?.label;
-  const visibleHobbies = userHobbies.slice(0, 4);
+  const visibleHobbies = sortedUserHobbies.slice(0, 4);
   const remainingHobbies = Math.max(0, userHobbies.length - visibleHobbies.length);
 
   // Dynamic card drag styles
-  const cardRotation = dragOffset.x * 0.08;
+  const cardRotation = dragX * 0.08;
   const dynamicCardStyle = isDragging
     ? {
-        transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${cardRotation}deg)`,
+        transform: `translate3d(${dragX}px, 0, 0) rotate(${cardRotation}deg)`,
         transition: 'none',
       }
     : undefined;
 
   // Swipe Stamp opacity
-  const likeStampOpacity = swipeAnimation === 'right' ? 1 : Math.min(Math.max(dragOffset.x / 80, 0), 1);
-  const nopeStampOpacity = swipeAnimation === 'left' ? 1 : Math.min(Math.max(-dragOffset.x / 80, 0), 1);
+  const likeStampOpacity = swipeAnimation === 'right' ? 1 : Math.min(Math.max(dragX / 80, 0), 1);
+  const nopeStampOpacity = swipeAnimation === 'left' ? 1 : Math.min(Math.max(-dragX / 80, 0), 1);
 
   return (
     <div className="tinder-deck-wrapper">
@@ -170,6 +175,8 @@ export default function TinderDeck({
               <div className="radar-center">&#128101;</div>
             </div>
             <h4>No hay candidatos disponibles</h4>
+            {onRefresh && <button type="button" className="btn btn-primary btn-sm"
+              disabled={pending || disabled} onClick={onRefresh}>Buscar nuevos perfiles</button>}
             <p>No se encontraron perfiles o candidatos para este usuario en este momento.</p>
           </div>
         ) : (
@@ -249,6 +256,7 @@ export default function TinderDeck({
                   </button>
                 </div>
               </div>
+
             </div>
           </article>
         )}
