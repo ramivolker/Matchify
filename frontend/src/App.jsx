@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { api } from './services/api';
 import { matchToProfile } from './utils/matchUtils';
+import { passCandidate } from './utils/candidateQueue';
 
 // Auth Screen
 import AuthView from './components/AuthView';
@@ -701,7 +702,7 @@ export default function App() {
             VISTA 2: EXCLUSIVA PARA USUARIO CON PERFIL NORMAL
             ========================================================================= */}
         {!isAdmin && (
-          <div className="app-view-container">
+          <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''}`}>
 
             {/* Top Bar Tinder: Selector de usuario activo */}
             <div className="tinder-top-bar">
@@ -737,7 +738,7 @@ export default function App() {
 
             {/* Vista de Deslizar Perfiles */}
             {tinderError && (
-              <div role="alert">
+              <div className={`tinder-error-state ${candidatos.length ? 'tinder-error-inline' : ''}`} role="alert">
                 {tinderError}{' '}
                 <button
                   className="btn btn-secondary btn-sm"
@@ -754,7 +755,7 @@ export default function App() {
               </div>
             )}
 
-            {currentUserTab === 'swipe' && !tinderLoading && (
+            {currentUserTab === 'swipe' && !tinderLoading && (!tinderError || candidatos.length > 0) && (
               <TinderDeck
                 key={currentTinderUserId}
                 usuarios={usuarios}
@@ -770,8 +771,8 @@ export default function App() {
                   (u) => u.id === currentTinderUserId
                 )}
                 onSwipe={handleTinderSwipe}
-                onRewind={() =>
-                  setRefreshTinder((n) => n + 1)
+                onPass={(profile) =>
+                  setCandidatos((queue) => passCandidate(queue, profile.id))
                 }
                 onOpenDetail={(u) =>
                   setDetailModal({

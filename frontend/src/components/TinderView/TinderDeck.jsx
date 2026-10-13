@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
 import UserAvatar from '../common/UserAvatar';
+import { GENEROS } from '../../utils/generoUtils';
 
 export default function TinderDeck({
   usuarios = [],
@@ -9,13 +10,12 @@ export default function TinderDeck({
   currentUserId,
   currentUser: currentUserProp,
   onSwipe,
-  onRewind,
+  onPass,
   onOpenDetail,
   onOpenReport,
   blockedUserIds = [],
 }) {
   const [pending, setPending] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [swipeAnimation, setSwipeAnimation] = useState('');
@@ -30,9 +30,8 @@ export default function TinderDeck({
 
   const activeProfile = deckQueue[0];
 
-  // Reset photo index and drag state on profile change
+  // Reset drag state on profile change
   useEffect(() => {
-    setPhotoIndex(0);
     setDragOffset({ x: 0, y: 0 });
     setIsDragging(false);
     setSwipeAnimation('');
@@ -46,8 +45,7 @@ export default function TinderDeck({
 
     // Haptic feedback
     if (navigator.vibrate) {
-      if (direction === 'up') navigator.vibrate([20, 30, 20]);
-      else navigator.vibrate(20);
+      navigator.vibrate(20);
     }
 
     try {
@@ -60,11 +58,9 @@ export default function TinderDeck({
     }
   };
 
-  const handleRewind = () => {
-    if (!pending && !disabled) {
-      if (navigator.vibrate) navigator.vibrate(15);
-      onRewind();
-    }
+  const handlePass = () => {
+    if (!activeProfile || pending || disabled || actionLock.current || deckQueue.length < 2) return;
+    onPass(activeProfile);
   };
 
   // Keyboard navigation for Desktop
@@ -79,21 +75,18 @@ export default function TinderDeck({
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handleAction('left');
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        handleAction('up');
       } else if (e.code === 'Space') {
         e.preventDefault();
         onOpenDetail(activeProfile);
-      } else if (e.key === 'r' || e.key === 'R') {
+      } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        handleRewind();
+        handlePass();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeProfile, pending, disabled]);
+  }, [activeProfile, pending, disabled, candidatos, onPass]);
 
   // Touch handlers for mobile fluid swipe
   const handleTouchStart = (e) => {
@@ -107,8 +100,7 @@ export default function TinderDeck({
     if (!isDragging || !activeProfile) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPosRef.current.x;
-    const deltaY = touch.clientY - startPosRef.current.y;
-    setDragOffset({ x: deltaX, y: deltaY });
+    setDragOffset({ x: deltaX, y: 0 });
   };
 
   const handleTouchEnd = () => {
@@ -116,14 +108,11 @@ export default function TinderDeck({
     setIsDragging(false);
 
     const thresholdX = 90;
-    const thresholdY = -100;
 
     if (dragOffset.x > thresholdX) {
       handleAction('right');
     } else if (dragOffset.x < -thresholdX) {
       handleAction('left');
-    } else if (dragOffset.y < thresholdY) {
-      handleAction('up');
     } else {
       setDragOffset({ x: 0, y: 0 });
     }
@@ -139,7 +128,7 @@ export default function TinderDeck({
     if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) {
       edad--;
     }
-    return `${edad} años`;
+    return edad;
   };
 
   // Shared hobbies calculation
@@ -154,16 +143,9 @@ export default function TinderDeck({
 
   const commonCount = userHobbies.filter((h) => myHobbyIds.includes(h.id)).length;
 
-  // Touch edges to cycle photos
-  const handleNextPhoto = (e) => {
-    e.stopPropagation();
-    setPhotoIndex((prev) => (prev + 1) % 3);
-  };
-
-  const handlePrevPhoto = (e) => {
-    e.stopPropagation();
-    setPhotoIndex((prev) => (prev === 0 ? 2 : prev - 1));
-  };
+  const generoLabel = GENEROS.find(({ value }) => value === activeProfile?.genero)?.label;
+  const visibleHobbies = userHobbies.slice(0, 4);
+  const remainingHobbies = Math.max(0, userHobbies.length - visibleHobbies.length);
 
   // Dynamic card drag styles
   const cardRotation = dragOffset.x * 0.08;
@@ -175,221 +157,108 @@ export default function TinderDeck({
     : undefined;
 
   // Swipe Stamp opacity
-  const likeStampOpacity = Math.min(Math.max(dragOffset.x / 80, 0), 1);
-  const nopeStampOpacity = Math.min(Math.max(-dragOffset.x / 80, 0), 1);
-  const superStampOpacity = Math.min(Math.max(-dragOffset.y / 80, 0), 1);
+  const likeStampOpacity = swipeAnimation === 'right' ? 1 : Math.min(Math.max(dragOffset.x / 80, 0), 1);
+  const nopeStampOpacity = swipeAnimation === 'left' ? 1 : Math.min(Math.max(-dragOffset.x / 80, 0), 1);
 
   return (
     <div className="tinder-deck-wrapper">
-      {/* Desktop Keyboard Shortcuts Helper Banner */}
-      <div className="keyboard-shortcuts-helper" aria-hidden="true">
-        <span>⌨️ Atajos:</span>
-        <span className="kbd-chip"><kbd>←</kbd> Descartar</span>
-        <span className="kbd-chip"><kbd>→</kbd> Me Gusta</span>
-        <span className="kbd-chip"><kbd>↑</kbd> Super Like</span>
-        <span className="kbd-chip"><kbd>Espacio</kbd> Ver Perfil</span>
-        <span className="kbd-chip"><kbd>R</kbd> Rebobinar</span>
-      </div>
-
       <div className="tinder-deck">
-        {!deckQueue.length ? (
-          <div className="tinder-empty-state">
+        {!activeProfile ? (
+          <div className="tinder-empty-state" role="status">
             <div className="radar-wrap">
-              <div className="radar-wave"></div>
-              <div className="radar-center">👥</div>
+              <div className="radar-wave" />
+              <div className="radar-center">&#128101;</div>
             </div>
             <h4>No hay candidatos disponibles</h4>
             <p>No se encontraron perfiles o candidatos para este usuario en este momento.</p>
           </div>
-        ) : !activeProfile ? (
-          <div className="tinder-empty-state">
-            <div className="radar-wrap">
-              <div className="radar-wave"></div>
-              <div className="radar-center">🔥</div>
-            </div>
-            <h4>¡Te pusiste al día!</h4>
-            <p>Has explorado todos los perfiles cercanos por el momento.</p>
-            <button
-            disabled={pending || disabled}
-              className="btn btn-primary btn-sm"
-              onClick={handleRewind}
-              style={{ marginTop: '1rem' }}
-            >
-              🔄 Buscar nuevos perfiles
-            </button>
-          </div>
         ) : (
-          <div
+          <article
             className={`tinder-card ${swipeAnimation ? `swipe-${swipeAnimation}` : ''}`}
             key={activeProfile.id}
             style={dynamicCardStyle}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
           >
-            {/* Visual Action Stamps while dragging */}
-            {likeStampOpacity > 0.1 && (
-              <div className="swipe-stamp stamp-like" style={{ opacity: likeStampOpacity }}>
-                LIKE
-              </div>
-            )}
-            {nopeStampOpacity > 0.1 && (
-              <div className="swipe-stamp stamp-nope" style={{ opacity: nopeStampOpacity }}>
-                NOPE
-              </div>
-            )}
-            {superStampOpacity > 0.1 && (
-              <div className="swipe-stamp stamp-super" style={{ opacity: superStampOpacity }}>
-                SUPER LIKE
-              </div>
-            )}
-
-            {/* Photo Indicators Bar */}
-            <div className="photo-indicators-bar">
-              <span className={`photo-dot ${photoIndex === 0 ? 'active' : ''}`} />
-              <span className={`photo-dot ${photoIndex === 1 ? 'active' : ''}`} />
-              <span className={`photo-dot ${photoIndex === 2 ? 'active' : ''}`} />
+            <div className="tinder-card-hero"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <UserAvatar user={activeProfile} size="hero" className="tinder-hero-photo"
+                alt={`Foto de ${activeProfile.nombre} ${activeProfile.apellido || ''}`} />
+              {likeStampOpacity > 0.1 && <div className="swipe-stamp stamp-like" style={{ opacity: likeStampOpacity }}>LIKE</div>}
+              {nopeStampOpacity > 0.1 && <div className="swipe-stamp stamp-nope" style={{ opacity: nopeStampOpacity }}>NOPE</div>}
             </div>
 
-            {/* Main Visual Hero */}
-            <div className="tinder-card-hero">
-              {/* Photo edge tap zones */}
-              <div className="photo-tap-edge tap-left" onClick={handlePrevPhoto} title="Foto anterior" />
-              <div className="photo-tap-edge tap-right" onClick={handleNextPhoto} title="Siguiente foto" />
-
-              <div className="tinder-online-badge">
-                <span className="live-pulse-dot" /> Online
-              </div>
-
-              <button
-                type="button"
-                className="tinder-report-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onOpenReport) onOpenReport(activeProfile);
-                }}
-                title="Reportar o bloquear este perfil"
-                aria-label="Reportar perfil"
-              >
-                ⚠️
-              </button>
-
-              <div className="tinder-avatar-big-frame">
-                <UserAvatar
-                  user={activeProfile}
-                  size="hero"
-                  className="tinder-avatar-big"
-                />
-              </div>
-
-              {commonCount > 0 && (
-                <div className="badge badge-success common-hobbies-badge">
-                  🔥 {commonCount} {commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}
-                </div>
-              )}
-            </div>
-
-            {/* Card Body & Dark Gradient Text Area */}
             <div className="tinder-card-body">
-              <div>
-                <div className="tinder-name-row">
-                  <span className="tinder-name">
-                    {activeProfile.nombre} {activeProfile.apellido}
-                  </span>
-                  <span className="tinder-age">{calcularEdad(activeProfile.fechaNacimiento)}</span>
-                  <span className="tinder-verified-badge" title="Perfil Verificado Oficial">
-                    ✓ Verificado
-                  </span>
-                </div>
-
-                <div className="tinder-location">
-                  <span>📍</span>{' '}
-                  {activeProfile.ubicacion
-                    ? `${activeProfile.ubicacion.ciudad}, ${activeProfile.ubicacion.provincia}`
-                    : 'Ubicación oculta'}
-                </div>
-                {Number.isFinite(activeProfile.distanciaKm) && (
-                  <div className="tinder-location">A {activeProfile.distanciaKm} km</div>
-                )}
-                {activeProfile.tipoUsuario && (
-                  <div className="tinder-location">{activeProfile.tipoUsuario.nombre}</div>
-                )}
-                <p className="tinder-bio">
-                  {activeProfile.biografia || 'Hola, estoy usando Matchify para conocer personas con mis mismos gustos y aficiones.'}
-                </p>
+              {onOpenReport && (
+                <button type="button" className="tinder-report-btn"
+                  onClick={() => onOpenReport(activeProfile)}
+                  title="Reportar o bloquear este perfil" aria-label="Reportar perfil">
+                  <span aria-hidden="true">&#8943;</span>
+                </button>
+              )}
+              <header className="tinder-profile-header">
+                <h2 className="tinder-name" title={`${activeProfile.nombre} ${activeProfile.apellido}, ${calcularEdad(activeProfile.fechaNacimiento)}`}>
+                  {activeProfile.nombre} {activeProfile.apellido}<span className="tinder-age">, {calcularEdad(activeProfile.fechaNacimiento)}</span>
+                </h2>
+                {activeProfile.verificado === true && <span className="tinder-verified-badge">&#10003; Verificado</span>}
+              </header>
+              <div className="tinder-profile-metadata">
+                <p className="tinder-location"><span aria-hidden="true">&#128205;</span> {activeProfile.ubicacion
+                  ? [activeProfile.ubicacion.ciudad, activeProfile.ubicacion.provincia].filter(Boolean).join(', ')
+                  : 'Ubicación oculta'}</p>
+                {Number.isFinite(activeProfile.distanciaKm) && <p className="tinder-location">A {activeProfile.distanciaKm} km</p>}
+                {(generoLabel || activeProfile.tipoUsuario?.nombre) && <div className="tinder-metadata">
+                  {generoLabel && <span>{generoLabel}</span>}
+                  {activeProfile.tipoUsuario?.nombre && <span>{activeProfile.tipoUsuario.nombre}</span>}
+                </div>}
               </div>
-
-              <div>
+              <section className="tinder-bio-section" aria-label="Biografía">
+                <h3 className="tinder-section-title">Sobre mí</h3>
+                <p className="tinder-bio">{activeProfile.biografia || 'Hola, estoy usando Matchify para conocer personas con mis mismos gustos y aficiones.'}</p>
+              </section>
+              <section className="tinder-hobbies-section" aria-label="Hobbies">
+                <h3 className="tinder-section-title">Hobbies</h3>
                 <div className="tinder-hobbies-chips">
-                  {userHobbies.length > 0 ? (
-                    userHobbies.map((h) => {
-                      const isCommon = myHobbyIds.includes(h.id);
-                      return (
-                        <span
-                          key={h.id}
-                          className={`tinder-chip ${isCommon ? 'match-chip' : ''}`}
-                        >
-                          {isCommon ? '🔥' : getHobbieEmoji(h)} {h.nombre}
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <span className="text-muted" style={{ fontSize: '0.78rem' }}>
-                      Sin hobbies especificados
-                    </span>
-                  )}
+                  {visibleHobbies.map((h) => {
+                    const isCommon = myHobbyIds.includes(h.id);
+                    return <span key={h.id} title={h.nombre} className={`tinder-chip ${isCommon ? 'match-chip' : ''}`}>
+                      {isCommon ? '🔥' : getHobbieEmoji(h)} {h.nombre}
+                    </span>;
+                  })}
+                  {remainingHobbies > 0 && <span className="tinder-chip tinder-chip-more" aria-label={`${remainingHobbies} hobbies adicionales`}>+{remainingHobbies}</span>}
+                  {!userHobbies.length && <span className="tinder-common-hint">Sin hobbies especificados</span>}
+                </div>
+                {commonCount > 0 && <p className="tinder-common-hint">{commonCount} {commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}</p>}
+              </section>
+              <div className="tinder-profile-actions">
+                <button type="button" className="tinder-detail-btn" disabled={pending || disabled}
+                  onClick={() => onOpenDetail(activeProfile)}>Ver perfil completo</button>
+                <div className="tinder-controls">
+                  <button type="button" className="tinder-btn btn-pass" disabled={pending || disabled || deckQueue.length < 2}
+                    onClick={handlePass} title="Mover este perfil al final de la cola">
+                    <span className="tinder-action-icon" aria-hidden="true">&#8595;</span><span>Pasar</span>
+                  </button>
+                  <button type="button" className="tinder-btn btn-dislike" disabled={pending || disabled}
+                    onClick={() => handleAction('left')}>
+                    <span className="tinder-action-icon" aria-hidden="true">&#10005;</span><span>Descartar</span>
+                  </button>
+                  <button type="button" className="tinder-btn btn-like" disabled={pending || disabled}
+                    onClick={() => handleAction('right')}>
+                    <span className="tinder-action-icon" aria-hidden="true">&#9829;</span><span>Me gusta</span>
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          </article>
         )}
       </div>
-
-      {/* Botones de Acción */}
-      {activeProfile && (
-        <div className="tinder-controls">
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-rewind"
-            onClick={handleRewind}
-            title="Buscar nuevos perfiles"
-          >
-            <span>🔄</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-dislike"
-            onClick={() => handleAction('left')}
-            title="Pasar (Dislike)"
-          >
-            <span>✕</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-superlike"
-            onClick={() => handleAction('up')}
-            title="Like (★)"
-          >
-            <span>★</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-like"
-            onClick={() => handleAction('right')}
-            title="Like"
-          >
-            <span>💚</span>
-          </button>
-          <button
-            disabled={pending || disabled}
-            className="tinder-btn btn-info"
-            onClick={() => onOpenDetail(activeProfile)}
-            title="Ver información completa"
-          >
-            <span>ℹ️</span>
-          </button>
-        </div>
-      )}
+      {activeProfile && <div className="keyboard-shortcuts-helper" aria-label="Atajos de teclado">
+        <span className="kbd-chip"><kbd>&#8592;</kbd> Descartar</span>
+        <span className="kbd-chip"><kbd>&#8594;</kbd> Me gusta</span>
+        <span className="kbd-chip"><kbd>&#8595;</kbd> Pasar</span>
+        <span className="kbd-chip"><kbd>Espacio</kbd> Ver perfil</span>
+      </div>}
     </div>
   );
 }

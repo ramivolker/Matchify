@@ -53,7 +53,7 @@ export default function UserDetailModal({ isOpen, onClose, usuario }) {
               </div>
               <div className="profile-meta-box">
                 <span>Estado del Perfil</span>
-                <strong>{usuario.activo ? '🟢 Activo' : '⚪ Inactivo'}</strong>
+                <strong>{usuario.activo === true ? '🟢 Activo' : usuario.activo === false ? '⚪ Inactivo' : 'No informado'}</strong>
               </div>
               <div className="profile-meta-box" style={{ gridColumn: '1 / -1' }}>
                 <span>Ubicación</span>
