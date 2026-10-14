@@ -4,8 +4,6 @@ export default function BottomNav({
   currentUserTab,
   setCurrentUserTab,
   matchesCount,
-  darkMode,
-  onToggleDarkMode,
 }) {
   const handleTabClick = (tab) => {
     if (navigator.vibrate) navigator.vibrate(15);
@@ -47,18 +45,6 @@ export default function BottomNav({
         <span className="bottom-nav-label">Perfil</span>
       </button>
 
-      <button
-        type="button"
-        className="bottom-nav-item"
-        onClick={() => {
-          if (navigator.vibrate) navigator.vibrate(15);
-          onToggleDarkMode();
-        }}
-        aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      >
-        <span className="bottom-nav-icon">{darkMode ? '☀️' : '🌙'}</span>
-        <span className="bottom-nav-label">{darkMode ? 'Claro' : 'Oscuro'}</span>
-      </button>
     </nav>
   );
 }
