@@ -4259,3 +4259,10 @@ body {
   font-size: 3.6rem;
   flex-shrink: 0;
 }
+
+/* Compact profile actions remain centered on mobile as well as desktop. */
+.modal.profile-actions-overlay { padding: 1rem; align-items: center; }
+.profile-actions-overlay .profile-actions-dialog { max-width: 380px; border-radius: var(--radius-lg); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.profile-actions-options { display: grid; gap: 0.75rem; }
+.profile-actions-options .btn { min-height: 44px; }
+.profile-actions-hint { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.9rem; }
