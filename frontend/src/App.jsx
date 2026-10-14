@@ -13,6 +13,7 @@ import NavbarMobile from './components/NavbarMobile';
 import BottomNav from './components/BottomNav';
 import Toast from './components/Toast';
 import ReportModal from './components/ReportModal';
+import ProfileActionsModal from './components/ProfileActionsModal';
 
 // Admin Components & Modals
 import StatsGrid from './components/AdminView/StatsGrid';
@@ -84,6 +85,10 @@ export default function App() {
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
   const [activeChatUser, setActiveChatUser] = useState(null);
   const [blockedUserIds, setBlockedUserIds] = useState([]);
+  const blockedUserIdsRef = useRef(blockedUserIds);
+  blockedUserIdsRef.current = blockedUserIds;
+  const blockLock = useRef(false);
+  const [blockingUser, setBlockingUser] = useState(false);
 
   const [candidatos, setCandidatos] = useState([]);
   const [seenByUser, setSeenByUser] = useState({});
@@ -108,9 +113,13 @@ export default function App() {
       api.getMatches(currentTinderUserId),
     ]).then(([candidateResult, matchResult]) => {
       if (cancelled) return;
-      if (candidateResult.status === 'fulfilled') setCandidatos(candidateResult.value);
+      if (candidateResult.status === 'fulfilled') {
+        setCandidatos(candidateResult.value.filter((user) => !blockedUserIdsRef.current.includes(user.id)));
+      }
       if (matchResult.status === 'fulfilled') {
-        setSessionMatches(matchResult.value.map((match) => matchToProfile(match, currentTinderUserId, usuarios)));
+        setSessionMatches(matchResult.value
+          .map((match) => matchToProfile(match, currentTinderUserId, usuarios))
+          .filter((user) => !blockedUserIdsRef.current.includes(user.id)));
       }
       const errors = [candidateResult, matchResult]
         .filter((result) => result.status === 'rejected')
@@ -130,7 +139,11 @@ export default function App() {
     const refresh = async () => {
       try {
         const result = await api.getMatches(currentTinderUserId, { signal: controller.signal });
-        if (!cancelled) setSessionMatches(result.map((match) => matchToProfile(match, currentTinderUserId, usuarios)));
+        if (!cancelled) {
+          setSessionMatches(result
+            .map((match) => matchToProfile(match, currentTinderUserId, usuarios))
+            .filter((user) => !blockedUserIdsRef.current.includes(user.id)));
+        }
       } catch (error) {
         if (!cancelled && error.name !== 'AbortError') setTinderError(error.message);
       } finally {
@@ -151,6 +164,7 @@ export default function App() {
   const [deleteModal, setDeleteModal] = useState({ open: false, onConfirm: null, title: '', message: '' });
   const [detailModal, setDetailModal] = useState({ open: false, usuario: null });
   const [reportModal, setReportModal] = useState({ open: false, user: null });
+  const [profileActions, setProfileActions] = useState({ user: null, confirming: false });
 
   // 1. Cargar datos al iniciar
   useEffect(() => {
@@ -171,6 +185,7 @@ export default function App() {
   }, []);
 
   const cerrarTodosLosModales = () => {
+    if (blockLock.current) return;
     setUsuarioModal({ open: false, data: null });
     setHobbieModal({ open: false, data: null });
     setUbicacionModal({ open: false, data: null });
@@ -178,6 +193,7 @@ export default function App() {
     setDetailModal({ open: false, usuario: null });
     setCelebrationData(null);
     setReportModal({ open: false, user: null });
+    setProfileActions({ user: null, confirming: false });
   };
 
   const showToast = (message, type = 'info') => {
@@ -295,50 +311,44 @@ export default function App() {
     return nuevo;
   };
 
-  // Safety report handler
-  const handleSubmitReport = async ({
-    userId,
-    userName,
-    reason,
-    blocked,
-  }) => {
+  // Shared by direct blocking and the optional block in the report flow.
+  const handleBlockUser = async (userId) => {
+    if (blockLock.current || !currentTinderUserId) return false;
+    const actorId = currentTinderUserId;
+    blockLock.current = true;
+    setBlockingUser(true);
     try {
-      if (blocked) {
-        await api.bloquearUsuario(
-          currentTinderUserId,
-          userId
-        );
-
-        setBlockedUserIds((prev) =>
-          prev.includes(userId)
-            ? prev
-            : [...prev, userId]
-        );
-
-        setSessionMatches((prev) =>
-          prev.filter((m) => m.id !== userId)
-        );
-
-        if (activeChatUser?.id === userId) {
-          setActiveChatUser(null);
-        }
-
-        setRefreshTinder((n) => n + 1);
-
-        showToast(
-          `Has reportado y bloqueado a ${userName}`,
-          'info'
-        );
-      } else {
-        showToast(
-          `Reporte enviado para ${userName}`,
-          'info'
-        );
-      }
+      await api.bloquearUsuario(actorId, userId);
+      if (activeUserRef.current !== actorId) return false;
+      blockedUserIdsRef.current = [...new Set([...blockedUserIdsRef.current, userId])];
+      setBlockedUserIds(blockedUserIdsRef.current);
+      setCandidatos((prev) => prev.filter((user) => user.id !== userId));
+      setSessionMatches((prev) => prev.filter((user) => user.id !== userId));
+      setActiveChatUser((prev) => prev?.id === userId ? null : prev);
+      setProfileActions({ user: null, confirming: false });
+      setReportModal({ open: false, user: null });
+      return true;
     } catch (err) {
       showToast(err.message, 'error');
+      return false;
+    } finally {
+      blockLock.current = false;
+      setBlockingUser(false);
     }
   };
+
+  const handleConfirmBlock = async () => {
+    const user = profileActions.user;
+    if (user && await handleBlockUser(user.id)) {
+      showToast('Bloqueaste a ' + user.nombre + ' ' + (user.apellido || ''), 'info');
+    }
+  };
+
+  const handleSubmitReport = async ({ userId, userName, blocked }) => {
+    if (blocked && !await handleBlockUser(userId)) return;
+    showToast((blocked ? 'Has reportado y bloqueado a ' : 'Reporte enviado para ') + userName, 'info');
+  };
+
   // Stats calculation
   const totalActivos = usuarios.filter((u) => u.activo !== false).length;
   const stats = {
@@ -707,7 +717,7 @@ export default function App() {
                     usuario: u,
                   })
                 }
-                onOpenReport={(u) => setReportModal({ open: true, user: u })}
+                onOpenActions={(user) => setProfileActions({ user, confirming: false })}
                 blockedUserIds={blockedUserIds}
               />
             )}
@@ -725,7 +735,7 @@ export default function App() {
                     usuario: u,
                   })
                 }
-                onOpenReport={(u) => setReportModal({ open: true, user: u })}
+                onOpenActions={(user) => setProfileActions({ user, confirming: false })}
                 onShowToast={showToast}
                 activeChatUser={activeChatUser}
                 onSelectChatUser={(u) => setActiveChatUser(u)}
@@ -823,6 +833,20 @@ export default function App() {
         commonHobbies={celebrationData?.commonHobbies}
         onClose={() => setCelebrationData(null)}
         onOpenChatWithUser={handleOpenChatFromMatch}
+      />
+
+      <ProfileActionsModal
+        key={String(profileActions.user?.id) + '-' + profileActions.confirming}
+        user={profileActions.user}
+        confirming={profileActions.confirming}
+        pending={blockingUser}
+        onClose={() => { if (!blockLock.current) setProfileActions({ user: null, confirming: false }); }}
+        onRequestBlock={() => setProfileActions((prev) => ({ ...prev, confirming: true }))}
+        onConfirmBlock={handleConfirmBlock}
+        onReport={() => {
+          setReportModal({ open: true, user: profileActions.user });
+          setProfileActions({ user: null, confirming: false });
+        }}
       />
 
       <ReportModal

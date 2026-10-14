@@ -13,7 +13,7 @@ export default function TinderDeck({
   onPass,
   onRefresh,
   onOpenDetail,
-  onOpenReport,
+  onOpenActions,
   blockedUserIds = [],
 }) {
   const [pending, setPending] = useState(false);
@@ -197,10 +197,10 @@ export default function TinderDeck({
             </div>
 
             <div className="tinder-card-body">
-              {onOpenReport && (
+              {onOpenActions && (
                 <button type="button" className="tinder-report-btn"
-                  onClick={() => onOpenReport(activeProfile)}
-                  title="Reportar o bloquear este perfil" aria-label="Reportar perfil">
+                  onClick={() => onOpenActions(activeProfile)}
+                  title="Reportar o bloquear este perfil" aria-label="Acciones del perfil">
                   <span aria-hidden="true">&#8943;</span>
                 </button>
               )}

@@ -7,7 +7,7 @@ export default function TinderMatches({
   currentUserId,
   onBackToExplore,
   onOpenDetail,
-  onOpenReport,
+  onOpenActions,
   activeChatUser,
   onSelectChatUser,
 }) {
@@ -183,8 +183,8 @@ export default function TinderMatches({
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  onClick={() => onOpenReport && onOpenReport(currentChatUser)}
-                  title="Reportar o Bloquear"
+                  onClick={() => onOpenActions && onOpenActions(currentChatUser)}
+                  title="Acciones del perfil" aria-label="Acciones del perfil"
                 >
                   ⚠️
                 </button>
