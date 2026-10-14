@@ -215,9 +215,8 @@ export default function TinderDeck({
                   ? [activeProfile.ubicacion.ciudad, activeProfile.ubicacion.provincia].filter(Boolean).join(', ')
                   : 'Ubicación oculta'}</p>
                 {Number.isFinite(activeProfile.distanciaKm) && <p className="tinder-location">A {activeProfile.distanciaKm} km</p>}
-                {(generoLabel || activeProfile.tipoUsuario?.nombre) && <div className="tinder-metadata">
+                {generoLabel && <div className="tinder-metadata">
                   {generoLabel && <span>{generoLabel}</span>}
-                  {activeProfile.tipoUsuario?.nombre && <span>{activeProfile.tipoUsuario.nombre}</span>}
                 </div>}
               </div>
               <section className="tinder-bio-section" aria-label="Biografía">
