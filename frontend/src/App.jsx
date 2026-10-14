@@ -74,10 +74,12 @@ export default function App() {
   const [hobbies, setHobbies] = useState([]);
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isApiOnline, setIsApiOnline] = useState(true);
+  const [, setIsApiOnline] = useState(true);
 
   // Tinder Session State
-  const [currentTinderUserId, setCurrentTinderUserId] = useState(null);
+  const [currentTinderUserId, setCurrentTinderUserId] = useState(() =>
+    session?.role === 'user' ? session.user?.id ?? null : null
+  );
   const [sessionMatches, setSessionMatches] = useState([]);
   const [celebrationData, setCelebrationData] = useState(null); // { currentUser, matchedUser, commonHobbies }
   const [activeChatUser, setActiveChatUser] = useState(null);
@@ -233,7 +235,7 @@ export default function App() {
               }
             }
           } catch {}
-          return usrs[0].id;
+          return null;
         });
       }
     } catch (err) {
@@ -246,49 +248,6 @@ export default function App() {
   // =========================================================================
   // AUTH HANDLERS
   // =========================================================================
-  const handleChangeTinderUser = (usuarioId) => {
-    const nuevoUsuario = usuarios.find(
-      (u) => u.id === usuarioId
-    );
-
-    if (!nuevoUsuario) return;
-
-    // Cambia el usuario activo de Tinder
-    setCurrentTinderUserId(usuarioId);
-
-    // Limpia estados pertenecientes al usuario anterior
-    setSessionMatches([]);
-    setCandidatos([]);
-    setSeenByUser({});
-    setActiveChatUser(null);
-    setCelebrationData(null);
-    setBlockedUserIds([]);
-    setTinderError('');
-
-    // También actualizamos la sesión
-    setSession((prev) => {
-      if (!prev) return prev;
-
-      const nuevaSession = {
-        ...prev,
-        nombre: nuevoUsuario.nombre,
-        apellido: nuevoUsuario.apellido,
-        email: nuevoUsuario.email,
-        user: nuevoUsuario,
-      };
-
-      localStorage.setItem(
-        'matchify_session',
-        JSON.stringify(nuevaSession)
-      );
-
-      return nuevaSession;
-    });
-
-    // Fuerza recarga de candidatos/matches
-    setRefreshTinder((n) => n + 1);
-  };
-  
   const handleLogin = (sessionData) => {
     const isAdm = sessionData?.role === 'admin';
     const safeSession = {
@@ -596,7 +555,6 @@ export default function App() {
       {/* Top Navbar para móviles */}
       <NavbarMobile
         session={session}
-        onLogout={handleLogout}
         onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
@@ -611,8 +569,6 @@ export default function App() {
         currentUserTab={currentUserTab}
         setCurrentUserTab={setCurrentUserTab}
         stats={stats}
-        isApiOnline={isApiOnline}
-        checkHealth={checkHealth}
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
         darkMode={darkMode}
@@ -703,38 +659,6 @@ export default function App() {
             ========================================================================= */}
         {!isAdmin && (
           <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''}`}>
-
-            {/* Top Bar Tinder: Selector de usuario activo */}
-            <div className="tinder-top-bar">
-              <div className="tinder-identity-box">
-                <span className="tinder-id-label">Navegando como:</span>
-
-                <select
-                  className="form-control tinder-select-user"
-                  disabled={savingInteraction}
-                  value={currentTinderUserId || ''}
-                  onChange={(e) =>
-                    handleChangeTinderUser(
-                      parseInt(e.target.value, 10)
-                    )
-                  }
-                >
-                  {usuarios.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.nombre} {u.apellido} (ID #{u.id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div
-                className="tinder-stats-pill"
-                onClick={() => setCurrentUserTab('matches')}
-              >
-                <span>💬 Matches:</span>{' '}
-                <strong>{sessionMatches.length}</strong>
-              </div>
-            </div>
 
             {/* Vista de Deslizar Perfiles */}
             {tinderError && (
@@ -846,8 +770,6 @@ export default function App() {
           currentUserTab={currentUserTab}
           setCurrentUserTab={setCurrentUserTab}
           matchesCount={sessionMatches.length}
-          darkMode={darkMode}
-          onToggleDarkMode={toggleDarkMode}
         />
       )}
 
