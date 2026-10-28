@@ -68,6 +68,7 @@ export default function App() {
   // Navigation Tabs
   const [currentAdminTab, setCurrentAdminTab] = useState('usuarios');
   const [currentUserTab, setCurrentUserTab] = useState('swipe'); // 'swipe' | 'matches' | 'perfil'
+  const [scrollToPreferences, setScrollToPreferences] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Data States
@@ -586,7 +587,7 @@ export default function App() {
       />
 
       {/* Contenido Principal */}
-      <main className="main-content">
+      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''}`}>
         {/* =========================================================================
             VISTA 1: EXCLUSIVA PARA ADMINISTRADOR
             ========================================================================= */}
@@ -708,9 +709,10 @@ export default function App() {
                 onPass={(profile) =>
                   setCandidatos((queue) => passCandidate(queue, profile.id))
                 }
-                onRefresh={() =>
-                  setRefreshTinder((n) => n + 1)
-                }
+                onAdjustPreferences={() => {
+                  setScrollToPreferences(true);
+                  setCurrentUserTab('perfil');
+                }}
                 onOpenDetail={(u) =>
                   setDetailModal({
                     open: true,
@@ -745,6 +747,8 @@ export default function App() {
             {/* Pestaña: Mi Perfil y Hobbies */}
             {currentUserTab === 'perfil' && (
               <MiPerfilTab
+                scrollToPreferences={scrollToPreferences}
+                onPreferencesFocused={() => setScrollToPreferences(false)}
                 currentUser={currentLoggedInUser}
                 ubicaciones={ubicaciones}
                 hobbies={hobbies}

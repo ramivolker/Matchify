@@ -8,8 +8,6 @@ export default function Sidebar({
   currentUserTab,
   setCurrentUserTab,
   stats,
-  isApiOnline,
-  checkHealth,
   isOpen,
   onClose,
   darkMode,
@@ -149,21 +147,26 @@ export default function Sidebar({
           </nav>
         )}
 
-        {/* Footer con Estado de la API, Tema y Cerrar Sesión */}
+        {/* Tema y cierre de sesión */}
         <div className="sidebar-footer">
           <div className="sidebar-footer-controls">
-            <div className="api-status">
-              <span className={`status-dot ${isApiOnline ? 'online' : 'offline'}`} />
-              <span className="status-text">{isApiOnline ? 'API Conectada' : 'API Desconectada'}</span>
-            </div>
-
             <button
               type="button"
-              className="btn-sm btn-ghost btn-theme-toggle"
+              className="btn-theme-toggle"
               onClick={onToggleDarkMode}
+              aria-label="Modo oscuro"
+              aria-pressed={darkMode}
               title={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
-              <span>{darkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro'}</span>
+              <span className="theme-toggle-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  {darkMode ? <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z" /> : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></>}
+                </svg>
+              </span>
+              <span className="theme-toggle-label">Modo {darkMode ? 'oscuro' : 'claro'}</span>
+              <span className={`theme-toggle-track ${darkMode ? 'is-dark' : ''}`} aria-hidden="true">
+                <span className="theme-toggle-thumb" />
+              </span>
             </button>
           </div>
 
@@ -172,7 +175,9 @@ export default function Sidebar({
             onClick={onLogout}
             title="Cerrar Sesión"
           >
-            <span>🚪</span> Cerrar Sesión
+            <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ verticalAlign: 'middle', transform: 'translateY(-1px)' }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg> Cerrar Sesión
           </button>
         </div>
       </aside>

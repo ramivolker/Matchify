@@ -11,7 +11,7 @@ export default function TinderDeck({
   currentUser: currentUserProp,
   onSwipe,
   onPass,
-  onRefresh,
+  onAdjustPreferences,
   onOpenDetail,
   onOpenActions,
   blockedUserIds = [],
@@ -141,15 +141,12 @@ export default function TinderDeck({
 
   const isCommonHobby = (hobbie) => myHobbyIds.includes(hobbie.id);
 
-  // Los hobbies en común se muestran primero (manteniendo el orden original dentro de cada grupo)
-  const sortedUserHobbies = [...userHobbies].sort(
-    (a, b) => Number(isCommonHobby(b)) - Number(isCommonHobby(a))
-  );
-
-  const commonCount = sortedUserHobbies.filter(isCommonHobby).length;
+  const commonHobbies = userHobbies.filter(isCommonHobby);
+  const sortedUserHobbies = [...commonHobbies, ...userHobbies.filter((hobbie) => !isCommonHobby(hobbie))];
+  const commonCount = commonHobbies.length;
 
   const generoLabel = GENEROS.find(({ value }) => value === activeProfile?.genero)?.label;
-  const visibleHobbies = sortedUserHobbies.slice(0, 4);
+  const visibleHobbies = sortedUserHobbies.slice(0, userHobbies.length > 6 ? 5 : 6);
   const remainingHobbies = Math.max(0, userHobbies.length - visibleHobbies.length);
 
   // Dynamic card drag styles
@@ -170,14 +167,14 @@ export default function TinderDeck({
       <div className="tinder-deck">
         {!activeProfile ? (
           <div className="tinder-empty-state" role="status">
-            <div className="radar-wrap">
-              <div className="radar-wave" />
+            <div className="radar-wrap" aria-hidden="true">
               <div className="radar-center">&#128101;</div>
             </div>
             <h4>No hay candidatos disponibles</h4>
-            {onRefresh && <button type="button" className="btn btn-primary btn-sm"
-              disabled={pending || disabled} onClick={onRefresh}>Buscar nuevos perfiles</button>}
-            <p>No se encontraron perfiles o candidatos para este usuario en este momento.</p>
+            <p className="discovery-empty-description">No encontramos más perfiles que coincidan con tus preferencias actuales. Probá ampliando la distancia, el rango de edad o los géneros que buscás.</p>
+            <button type="button" className="btn btn-primary discovery-empty-cta"
+              onClick={onAdjustPreferences}><span aria-hidden="true">⚙️</span> Ajustar preferencias</button>
+            <p className="discovery-empty-hint">También puede que ya hayas visto todos los perfiles compatibles.</p>
           </div>
         ) : (
           <article
@@ -233,9 +230,9 @@ export default function TinderDeck({
                     </span>;
                   })}
                   {remainingHobbies > 0 && <span className="tinder-chip tinder-chip-more" aria-label={`${remainingHobbies} hobbies adicionales`}>+{remainingHobbies}</span>}
-                  {!userHobbies.length && <span className="tinder-common-hint">Sin hobbies especificados</span>}
+                  {!userHobbies.length && <span className="tinder-hobbies-empty">Sin hobbies especificados</span>}
                 </div>
-                {commonCount > 0 && <p className="tinder-common-hint">{commonCount} {commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}</p>}
+                <p className="tinder-common-hint">{commonCount === 0 ? 'Sin hobbies en común' : `${commonCount} ${commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}`}</p>
               </section>
               <div className="tinder-profile-actions">
                 <button type="button" className="tinder-detail-btn" disabled={pending || disabled}
