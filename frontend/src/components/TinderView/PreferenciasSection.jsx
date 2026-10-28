@@ -235,7 +235,7 @@ export default function PreferenciasSection({ usuarioId, onSaved, onShowToast })
 
   const update = (key, value) => setForm((previous) => ({ ...previous, [key]: value }));
   return (
-    <section className="profile-section-card preferences-panel" aria-labelledby="preferencias-title" aria-busy={loading || saving}>
+    <section id="preferencias-busqueda" tabIndex={-1} className="profile-section-card preferences-panel" aria-labelledby="preferencias-title" aria-busy={loading || saving}>
       <h3 id="preferencias-title">Preferencias de búsqueda</h3>
       <p className="preferences-subtitle">Elegí la distancia, el rango de edad y los géneros de los perfiles que querés conocer.</p>
       {loading ? <p role="status">Cargando preferencias…</p> : error ? (

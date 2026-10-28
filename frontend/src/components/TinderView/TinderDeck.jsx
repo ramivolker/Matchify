@@ -11,7 +11,7 @@ export default function TinderDeck({
   currentUser: currentUserProp,
   onSwipe,
   onPass,
-  onRefresh,
+  onAdjustPreferences,
   onOpenDetail,
   onOpenActions,
   blockedUserIds = [],
@@ -170,14 +170,14 @@ export default function TinderDeck({
       <div className="tinder-deck">
         {!activeProfile ? (
           <div className="tinder-empty-state" role="status">
-            <div className="radar-wrap">
-              <div className="radar-wave" />
+            <div className="radar-wrap" aria-hidden="true">
               <div className="radar-center">&#128101;</div>
             </div>
             <h4>No hay candidatos disponibles</h4>
-            {onRefresh && <button type="button" className="btn btn-primary btn-sm"
-              disabled={pending || disabled} onClick={onRefresh}>Buscar nuevos perfiles</button>}
-            <p>No se encontraron perfiles o candidatos para este usuario en este momento.</p>
+            <p className="discovery-empty-description">No encontramos más perfiles que coincidan con tus preferencias actuales. Probá ampliando la distancia, el rango de edad o los géneros que buscás.</p>
+            <button type="button" className="btn btn-primary discovery-empty-cta"
+              onClick={onAdjustPreferences}><span aria-hidden="true">⚙️</span> Ajustar preferencias</button>
+            <p className="discovery-empty-hint">También puede que ya hayas visto todos los perfiles compatibles.</p>
           </div>
         ) : (
           <article
