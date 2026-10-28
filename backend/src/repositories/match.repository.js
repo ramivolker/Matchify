@@ -22,8 +22,8 @@ async function obtenerMatchesPorUsuario(usuarioId) {
       activo: true,
     },
     include: {
-      usuario1: true,
-      usuario2: true,
+      usuario1: { include: { fotos: { orderBy: { orden: 'asc' } } } },
+      usuario2: { include: { fotos: { orderBy: { orden: 'asc' } } } },
       mensajes: { take: 1, orderBy: [{ enviadoEn: 'desc' }, { id: 'desc' }] },
       _count: { select: { mensajes: { where: { leido: false, emisorId: { not: usuarioId } } } } },
     },

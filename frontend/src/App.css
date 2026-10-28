@@ -135,6 +135,34 @@ body {
   gap: 0.75rem;
 }
 
+.sidebar-brand-logo-container {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  padding: 3px;
+}
+
+.sidebar-brand-logo-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.sidebar-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 10px;
+}
+
 .logo-icon {
   font-size: 1.4rem;
   background: linear-gradient(135deg, #ff4757, #ff6b81);
@@ -1848,6 +1876,47 @@ body {
   padding: 0.75rem;
   border-radius: var(--radius);
   margin-bottom: 1.25rem;
+}
+
+.sidebar-user-card.clickable {
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.sidebar-user-card.clickable:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 42, 109, 0.4);
+  transform: translateY(-1px);
+}
+
+.sidebar-user-avatar-custom {
+  width: 38px !important;
+  height: 38px !important;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sidebar-admin-avatar-container {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  padding: 3px;
+}
+
+.sidebar-admin-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .sidebar-user-avatar {
@@ -4337,3 +4406,714 @@ body {
 .profile-actions-options { display: grid; gap: 0.75rem; }
 .profile-actions-options .btn { min-height: 44px; }
 .profile-actions-hint { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.9rem; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   CARRUSEL DE FOTOS — TinderDeck
+   ══════════════════════════════════════════════════════════════ */
+.photo-carousel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--primary-light);
+  touch-action: pan-y;
+}
+
+.carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.carousel-fallback {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 5rem !important;
+}
+
+/* Flechas de navegación */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, opacity 0.18s ease;
+  opacity: 0.72;
+  -webkit-tap-highlight-color: transparent;
+}
+.carousel-arrow:hover { background: rgba(0, 0, 0, 0.6); opacity: 1; }
+.carousel-arrow-left  { left: 0.55rem; }
+.carousel-arrow-right { right: 0.55rem; }
+
+/* Dots indicadores */
+.carousel-dots {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  z-index: 10;
+  pointer-events: none; /* los buttons internos sí son clickeables */
+}
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+}
+.carousel-dot.active {
+  background: #fff;
+  transform: scale(1.25);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GALERÍA DE FOTOS DE PERFIL — MiPerfilTab
+   ══════════════════════════════════════════════════════════════ */
+.profile-photos-section {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+.profile-photos-section .section-header-flex {
+  margin-bottom: 1rem;
+}
+.profile-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.65rem;
+}
+.photo-thumb-wrapper {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--bg-main);
+  transition: border-color 0.2s ease;
+}
+.photo-thumb-wrapper.is-main {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+.photo-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-thumb-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: rgba(0, 0, 0, 0.52);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  padding: 0.3rem;
+}
+.photo-thumb-wrapper:hover .photo-thumb-actions { opacity: 1; }
+.photo-thumb-action-btn {
+  width: 100%;
+  padding: 0.18rem 0.4rem;
+  border: 0;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  transition: background 0.15s;
+  line-height: 1.5;
+  text-align: center;
+}
+.photo-thumb-action-btn:hover { background: rgba(255,255,255,0.3); }
+.photo-thumb-action-btn.danger { background: rgba(220,38,38,0.7); }
+.photo-thumb-action-btn.danger:hover { background: rgba(220,38,38,0.9); }
+.photo-main-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.photo-add-btn {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--border);
+  background: var(--bg-main);
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  width: 100%;
+  padding: 0;
+  line-height: 1;
+}
+.photo-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+.photo-add-btn span.add-label { font-size: 0.65rem; font-weight: 700; }
+.photo-upload-input { display: none; }
+
+/* Aviso de límite */
+.photos-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; }
+
+/* ── REORDENAMIENTO EN THUMBNAILS DE PERFIL ── */
+.photo-thumb-reorder-row {
+  display: flex;
+  gap: 0.25rem;
+  width: 100%;
+}
+.photo-thumb-arrow-btn {
+  flex: 1;
+  padding: 0.18rem 0.2rem;
+  border: 0;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transition: background 0.15s;
+  line-height: 1.3;
+  text-align: center;
+}
+.photo-thumb-arrow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.4);
+}
+.photo-thumb-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   APPLE HUMAN INTERFACE: GESTOR DE FOTOS (MODAL / SHEET)
+   ========================================================================== */
+.apple-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  animation: appleFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes appleFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes appleSheetIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.apple-sheet {
+  width: 100%;
+  max-width: 580px;
+  background: #1c1c1e !important;
+  color: #f5f5f7 !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.35) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  animation: appleSheetIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Cabecera */
+.apple-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 22px 14px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1c1c1e;
+}
+
+.apple-sheet-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.apple-sheet-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.015em;
+}
+
+.apple-sheet-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #86868b;
+  letter-spacing: -0.01em;
+}
+
+.apple-sheet-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1a6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.apple-sheet-close-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+/* Cuerpo */
+.apple-sheet-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #1c1c1e;
+}
+
+/* Zona de Carga estilo AirDrop / iCloud */
+.apple-dropzone {
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 20px 16px;
+  transition: all 0.18s ease;
+  cursor: default;
+}
+
+.apple-dropzone.is-dragging {
+  border-color: #0a84ff;
+  background: rgba(10, 132, 255, 0.06);
+}
+
+.apple-hidden-input {
+  display: none;
+}
+
+.apple-dropzone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.apple-upload-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a84ff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.apple-dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apple-dropzone-primary-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.apple-dropzone-secondary-text {
+  font-size: 12px;
+  color: #86868b;
+}
+
+.apple-dropzone-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+/* Botones Apple System */
+.apple-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apple-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.apple-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apple-link-btn {
+  background: transparent;
+  border: none;
+  color: #0a84ff;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.apple-link-btn:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.apple-url-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 6px;
+}
+
+.apple-text-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.apple-text-input:focus {
+  border-color: #0a84ff;
+}
+
+.apple-btn-primary {
+  background: #0071e3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 7px 18px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: background 0.15s ease;
+}
+
+.apple-btn-primary:hover:not(:disabled) {
+  background: #0077ed !important;
+}
+
+.apple-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apple-btn-sm {
+  padding: 6px 12px !important;
+  font-size: 12.5px !important;
+}
+
+/* Sección Galería / Fototeca */
+.apple-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.apple-gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.apple-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #86868b;
+}
+
+.apple-counter-pill {
+  font-size: 12px;
+  color: #86868b;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.apple-empty-gallery {
+  padding: 28px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.apple-empty-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #a1a1a6;
+}
+
+.apple-empty-sub {
+  font-size: 12px;
+  color: #636366;
+}
+
+/* Grilla estilo Apple Photos */
+.apple-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.apple-photo-card {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111113;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.apple-photo-card.is-main {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 1.5px #0a84ff;
+}
+
+.apple-photo-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.apple-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.apple-main-indicator {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  background: rgba(10, 132, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.apple-order-indicator {
+  position: absolute;
+  bottom: 7px;
+  left: 7px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #e5e5ea;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Overlay de control discreto que aparece en hover */
+.apple-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.4) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 7px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 3;
+}
+
+.apple-photo-card:hover .apple-photo-overlay {
+  opacity: 1;
+}
+
+.apple-reorder-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.apple-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.apple-icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 30, 32, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #f5f5f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.apple-icon-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.apple-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.apple-icon-btn.danger {
+  color: #ff453a;
+}
+
+.apple-icon-btn.danger:hover:not(:disabled) {
+  background: #ff453a;
+  color: #ffffff;
+}
+
+.apple-pill-action-btn {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.apple-pill-action-btn:hover:not(:disabled) {
+  background: #0a84ff;
+  border-color: #0a84ff;
+}
+
+/* Pie del modal */
+.apple-sheet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1c1c1e !important;
+}
+
+.apple-footer-status {
+  font-size: 12px;
+  color: #86868b;
+  letter-spacing: -0.01em;
+}
+

@@ -190,16 +190,59 @@ export const api = {
     return res.json();
   },
 
-  // Usuarios
-  async getCandidatos(usuarioId) {
-    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/candidatos`);
+  // Fotos de Usuario
+  async getFotos(usuarioId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/fotos`);
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      throw new Error(json.error || 'Error al obtener candidatos');
+      throw new Error(json.error || json.message || 'Error al obtener fotos');
     }
     return res.json();
   },
 
+  async agregarFoto(usuarioId, fotoData) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/fotos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(typeof fotoData === 'string' ? { url: fotoData } : fotoData),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || json.message || 'Error al agregar foto');
+    return json;
+  },
+
+  async eliminarFoto(usuarioId, fotoId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/fotos/${fotoId}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.error || json.message || 'Error al eliminar foto');
+    }
+    return true;
+  },
+
+  async marcarFotoPrincipal(usuarioId, fotoId) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/fotos/${fotoId}/principal`, {
+      method: 'PUT',
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || json.message || 'Error al marcar foto principal');
+    return json;
+  },
+
+  async reordenarFotos(usuarioId, fotosIds) {
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/fotos/reordenar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fotosIds }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || json.message || 'Error al reordenar fotos');
+    return json;
+  },
+
+  // Usuarios
   async getUsuarios() {
     const res = await fetch(`${API_BASE}/usuarios`);
     if (!res.ok) throw new Error('Error al obtener usuarios');

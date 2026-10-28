@@ -10,6 +10,7 @@ const obtenerTodos = async () => {
       ubicacion: true,
       tipoUsuario: true,
       hobbies: { include: { hobbie: true } },
+      fotos: { orderBy: { orden: "asc" } },
     },
   });
 };
@@ -17,7 +18,12 @@ const obtenerTodos = async () => {
 const obtenerPorId = async (id) => {
   return prisma.usuario.findUnique({
     where: { id },
-    include: { ubicacion: true, tipoUsuario: true },
+    include: {
+      ubicacion: true,
+      tipoUsuario: true,
+      hobbies: { include: { hobbie: true } },
+      fotos: { orderBy: { orden: "asc" } },
+    },
   });
 };
 

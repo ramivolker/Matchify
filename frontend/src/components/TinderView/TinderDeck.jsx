@@ -2,6 +2,95 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
 import UserAvatar from '../common/UserAvatar';
 import { GENEROS } from '../../utils/generoUtils';
+import { getUserPhotos } from '../../utils/userAvatarUtils';
+
+// ── Carrusel de fotos dentro de la card ─────────────────────────────────────
+function PhotoCarousel({ user, onTouchStart, onTouchMove, onTouchEnd, dragX, isDragging }) {
+  const photos = getUserPhotos(user);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [imgError, setImgError] = useState(false);
+
+  // Reset al cambiar de perfil
+  useEffect(() => {
+    setPhotoIndex(0);
+    setImgError(false);
+  }, [user?.id]);
+
+  const total = photos.length;
+  const current = photos[photoIndex] || null;
+
+  const goNext = (e) => {
+    e.stopPropagation();
+    setPhotoIndex((i) => (i + 1) % total);
+    setImgError(false);
+  };
+
+  const goPrev = (e) => {
+    e.stopPropagation();
+    setPhotoIndex((i) => (i - 1 + total) % total);
+    setImgError(false);
+  };
+
+  return (
+    <div
+      className="photo-carousel"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Imagen actual */}
+      {current && !imgError ? (
+        <img
+          key={current}
+          src={current}
+          alt={`Foto ${photoIndex + 1} de ${user?.nombre || 'usuario'}`}
+          className="carousel-img"
+          onError={() => setImgError(true)}
+          draggable={false}
+        />
+      ) : (
+        <UserAvatar user={user} size="hero" className="carousel-fallback" />
+      )}
+
+      {/* Flechas de navegación (solo si hay más de 1 foto) */}
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            className="carousel-arrow carousel-arrow-left"
+            onClick={goPrev}
+            aria-label="Foto anterior"
+            title="Foto anterior"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="carousel-arrow carousel-arrow-right"
+            onClick={goNext}
+            aria-label="Foto siguiente"
+            title="Foto siguiente"
+          >
+            ›
+          </button>
+
+          {/* Indicadores (dots) */}
+          <div className="carousel-dots" aria-label={`Foto ${photoIndex + 1} de ${total}`}>
+            {photos.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`carousel-dot ${idx === photoIndex ? 'active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); setPhotoIndex(idx); setImgError(false); }}
+                aria-label={`Ir a foto ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function TinderDeck({
   usuarios = [],
@@ -185,13 +274,16 @@ export default function TinderDeck({
             key={activeProfile.id}
             style={dynamicCardStyle}
           >
-            <div className="tinder-card-hero"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <UserAvatar user={activeProfile} size="hero" className="tinder-hero-photo"
-                alt={`Foto de ${activeProfile.nombre} ${activeProfile.apellido || ''}`} />
+            <div className="tinder-card-hero">
+              {/* Carrusel de fotos con flechas y dots */}
+              <PhotoCarousel
+                user={activeProfile}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                dragX={dragX}
+                isDragging={isDragging}
+              />
               {likeStampOpacity > 0.1 && <div className="swipe-stamp stamp-like" style={{ opacity: likeStampOpacity }}>LIKE</div>}
               {nopeStampOpacity > 0.1 && <div className="swipe-stamp stamp-nope" style={{ opacity: nopeStampOpacity }}>NOPE</div>}
             </div>

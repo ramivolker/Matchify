@@ -40,6 +40,14 @@ const obtenerCandidatos = async (usuarioId, generos) => {
       genero: true,
       ubicacion: true,
       tipoUsuario: true,
+      fotos: {
+        orderBy: { orden: "asc" },
+        select: {
+          id: true,
+          url: true,
+          orden: true,
+        },
+      },
       hobbies: {
         select: {
           hobbie: true,

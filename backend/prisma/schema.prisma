@@ -47,6 +47,7 @@ model Usuario {
   matchesComoUsuario1 Match[] @relation("MatchUsuario1")
   matchesComoUsuario2 Match[] @relation("MatchUsuario2")
   mensajes Mensaje[]
+  fotos    Foto[]
 
   bloqueosRealizados Bloqueo[] @relation("BloqueosRealizados")
   bloqueosRecibidos  Bloqueo[] @relation("BloqueosRecibidos")
@@ -166,4 +167,15 @@ model Bloqueo {
   usuarioBloqueado  Usuario @relation("BloqueosRecibidos", fields: [usuarioBloqueadoId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioBloqueadorId, usuarioBloqueadoId])
+}
+
+model Foto {
+  id        Int      @id @default(autoincrement())
+  url       String   @db.LongText
+  orden     Int      @default(0)
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+
+  @@index([usuarioId])
 }
