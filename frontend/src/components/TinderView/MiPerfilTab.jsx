@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { profileAge } from '../../utils/profileAge';
 import { api } from '../../services/api';
 import PreferenciasSection from './PreferenciasSection';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
@@ -6,36 +8,6 @@ import { getUserAvatar, getUserPhotos } from '../../utils/userAvatarUtils';
 import UserAvatar from '../common/UserAvatar';
 import AvatarPickerModal from './AvatarPickerModal';
 import { GENEROS } from '../../utils/generoUtils';
-
-// Categorización inteligente de hobbies
-export const HOBBIE_CATEGORIES = [
-  { id: 'all', label: 'Todos', icon: '🌟' },
-  {
-    id: 'deportes',
-    label: 'Deporte & Fitness',
-    icon: '⚽',
-    keywords: ['fútbol', 'gimnasio', 'running', 'ciclismo', 'pádel', 'padel', 'tenis', 'básquet', 'basquet', 'natación', 'natacion', 'yoga', 'trekking', 'montaña', 'deporte'],
-  },
-  {
-    id: 'arte',
-    label: 'Arte & Cultura',
-    icon: '🎨',
-    keywords: ['fotografía', 'fotografia', 'arte', 'música', 'musica', 'en vivo', 'lectura', 'cine', 'series', 'teatro', 'diseño', 'dibujo'],
-  },
-  {
-    id: 'social',
-    label: 'Social & Salidas',
-    icon: '☕',
-    keywords: ['gastronomía', 'gastronomia', 'café', 'cafe', 'cocina', 'viajes', 'mascotas', 'bar', 'amigos', 'fiesta'],
-  },
-  {
-    id: 'tech',
-    label: 'Tecnología & Geek',
-    icon: '💻',
-    keywords: ['programación', 'programacion', 'tecnología', 'tecnologia', 'videojuegos', 'gaming', 'computacion', 'software'],
-  },
-  { id: 'mine', label: 'Mis Hobbies', icon: '🔥' },
-];
 
 export default function MiPerfilTab({
   currentUser,
@@ -64,12 +36,70 @@ export default function MiPerfilTab({
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [savingBio, setSavingBio] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [bioError, setBioError] = useState('');
+  const [bioExpanded, setBioExpanded] = useState(false);
+  const [bioTruncated, setBioTruncated] = useState(false);
+  const bioTextRef = useRef(null);
+
+  useEffect(() => {
+    setBioExpanded(false);
+  }, [currentUser?.biografia]);
+
+  useEffect(() => {
+    const text = bioTextRef.current;
+    if (!text || bioExpanded) return;
+    const measure = () => setBioTruncated(text.scrollHeight > text.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(text);
+    return () => observer.disconnect();
+  }, [currentUser?.biografia, isEditingBio, bioExpanded]);
+  const modalRef = useRef(null);
+  const profileEditButtonRef = useRef(null);
+  const loadingRef = useRef(false);
+  loadingRef.current = loading;
+  const edad = profileAge(currentUser?.fechaNacimiento);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && !loadingRef.current) setIsEditing(false);
+      if (event.key !== 'Tab') return;
+      const controls = [...modalRef.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled)')];
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      profileEditButtonRef.current?.focus({ preventScroll: true });
+    };
+  }, [isEditing]);
+
+  const openProfileEditor = () => {
+    setNombre(currentUser?.nombre || '');
+    setApellido(currentUser?.apellido || '');
+    setEmail(currentUser?.email || '');
+    setGenero(currentUser?.genero ?? '');
+    setUbicacionId(currentUser?.ubicacionId || '');
+    setProfileError('');
+    setIsEditing(true);
+  };
+
+  const openBioEditor = () => {
+    setBiografia(currentUser?.biografia ?? '');
+    setBioError('');
+    setIsEditingBio(true);
+  };
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(() => getUserAvatar(currentUser));
 
-  // Buscador y categoría activa de hobbies
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Form states
   const [nombre, setNombre] = useState(currentUser?.nombre || '');
@@ -238,32 +268,6 @@ export default function MiPerfilTab({
   if (currentUser?.ubicacionId || currentUser?.ubicacion) completionScore += 10;
   if (localHobbyIds.length >= 2) completionScore += 15;
 
-  // Filtrado reactivo de hobbies por texto y categoría
-  const filteredHobbies = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-
-    return hobbies.filter((hobbie) => {
-      const hobbieNombre = (hobbie.nombre || '').toLowerCase();
-
-      // Filtro por texto de búsqueda
-      if (q && !hobbieNombre.includes(q)) {
-        return false;
-      }
-
-      // Filtro por categoría seleccionada
-      if (selectedCategory === 'all') return true;
-
-      if (selectedCategory === 'mine') {
-        return localHobbyIds.includes(hobbie.id);
-      }
-
-      const categoryObj = HOBBIE_CATEGORIES.find((cat) => cat.id === selectedCategory);
-      if (!categoryObj || !categoryObj.keywords) return true;
-
-      return categoryObj.keywords.some((keyword) => hobbieNombre.includes(keyword));
-    });
-  }, [hobbies, searchQuery, selectedCategory, localHobbyIds]);
-
   const handleToggleHobbie = async (hobbieId) => {
     if (busyHobbyId) return;
     if (navigator.vibrate) navigator.vibrate(15);
@@ -306,14 +310,15 @@ export default function MiPerfilTab({
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
+    setProfileError('');
     try {
       await api.actualizarUsuario(currentUser.id, {
         nombre: nombre.trim(),
         apellido: apellido.trim(),
         email: email.trim(),
-        fechaNacimiento: currentUser?.fechaNacimiento || '2000-01-01',
-        biografia: biografia.trim(),
+        fechaNacimiento: currentUser?.fechaNacimiento,
         genero: genero || null,
         ubicacionId: ubicacionId ? parseInt(ubicacionId, 10) : null,
         activo: currentUser?.activo !== false,
@@ -322,9 +327,35 @@ export default function MiPerfilTab({
       onShowToast('Tu perfil ha sido actualizado con éxito ✨', 'success');
       setIsEditing(false);
     } catch (err) {
-      onShowToast(err.message || 'Error al actualizar perfil', 'error');
+      setProfileError(err.message || 'Error al actualizar perfil');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveBio = async (event) => {
+    event.preventDefault();
+    if (savingBio) return;
+    setSavingBio(true);
+    setBioError('');
+    try {
+      await api.actualizarUsuario(currentUser.id, {
+        nombre: currentUser.nombre,
+        apellido: currentUser.apellido,
+        email: currentUser.email,
+        fechaNacimiento: currentUser.fechaNacimiento,
+        ubicacionId: currentUser.ubicacionId,
+        genero: currentUser.genero ?? null,
+        activo: currentUser.activo !== false,
+        biografia: biografia.trim(),
+      });
+      await onProfileUpdated();
+      setIsEditingBio(false);
+      onShowToast('Tu biografía se guardó correctamente', 'success');
+    } catch (error) {
+      setBioError(error.message || 'No se pudo guardar la biografía');
+    } finally {
+      setSavingBio(false);
     }
   };
 
@@ -385,7 +416,7 @@ export default function MiPerfilTab({
 
           <div className="profile-banner-details">
             <h2>
-              <span>{currentUser?.nombre} {currentUser?.apellido}</span>
+              <span>{currentUser?.nombre} {currentUser?.apellido}{edad !== null && `, ${edad}`}</span>
               <span className="tinder-verified-badge" title="Perfil Verificado">
                 ✓ Verificado
               </span>
@@ -405,112 +436,140 @@ export default function MiPerfilTab({
 
           <button
             type="button"
-            className={`btn ${isEditing ? 'btn-secondary' : 'btn-primary'} btn-sm profile-edit-btn`}
-            onClick={() => setIsEditing(!isEditing)}
+            className="btn btn-primary btn-sm profile-edit-btn"
+            ref={profileEditButtonRef}
+            onClick={openProfileEditor}
           >
-            {isEditing ? 'Cancelar' : '✏️ Editar Perfil'}
+            ✏️ Editar Perfil
           </button>
         </div>
 
-        {/* MODO EDICIÓN */}
-        {isEditing ? (
-          <form className="profile-edit-form" onSubmit={handleSaveProfile}>
-            <h3 className="section-title">Editar Información Personal</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Nombre</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Apellido</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={apellido}
-                  onChange={(e) => setApellido(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+      </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Correo Electrónico</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Ubicación</label>
-                <select
-                  className="form-control"
-                  value={ubicacionId}
-                  onChange={(e) => setUbicacionId(e.target.value)}
-                >
-                  <option value="">Seleccionar ciudad...</option>
-                  {ubicaciones.map((ub) => (
-                    <option key={ub.id} value={ub.id}>
-                      {ub.ciudad}, {ub.provincia} ({ub.pais})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="perfil-genero">Género</label>
-              <select id="perfil-genero" className="form-control" value={genero}
-                onChange={(event) => setGenero(event.target.value)} disabled={loading}>
-                <option value="">Sin especificar</option>
-                {GENEROS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Biografía / Presentación</label>
-              <textarea
-                className="form-control"
-                rows="3"
-                value={biografia}
-                onChange={(e) => setBiografia(e.target.value)}
-                placeholder="Escribe algo sobre ti, qué te gusta hacer en tu tiempo libre..."
-                maxLength={500}
-              />
-            </div>
-
+      <section className="profile-section-card profile-about-card" aria-labelledby="profile-about-title">
+        <div className="profile-about-header">
+          <h3 id="profile-about-title" className="section-title">Biografía</h3>
+          {!isEditingBio && currentUser?.biografia?.trim() && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={openBioEditor}>✏️ Editar</button>
+          )}
+        </div>
+        {isEditingBio ? (
+          <form onSubmit={handleSaveBio} aria-busy={savingBio}>
+            <label className="preferences-sr-only" htmlFor="perfil-biografia">Biografía</label>
+            <textarea id="perfil-biografia" className="form-control profile-about-editor" rows={4}
+              value={biografia} onChange={(event) => setBiografia(event.target.value)}
+              maxLength={500} disabled={savingBio} autoFocus placeholder="Contá algo sobre vos…" />
+            {bioError && <p className="profile-save-error" role="alert">{bioError}</p>}
             <div className="form-actions-row">
-              <button type="button" className="btn btn-secondary" onClick={() => setIsEditing(false)}>
-                Descartar
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Guardando...' : '💾 Guardar Cambios'}
-              </button>
+              <button type="button" className="btn btn-secondary" disabled={savingBio} onClick={() => {
+                setBiografia(currentUser?.biografia ?? '');
+                setIsEditingBio(false);
+                setBioError('');
+              }}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={savingBio}>{savingBio ? 'Guardando…' : 'Guardar biografía'}</button>
             </div>
           </form>
+        ) : currentUser?.biografia?.trim() ? (
+          <div>
+            <p id="profile-biography-text" ref={bioTextRef} className={`profile-bio-text ${bioExpanded ? '' : 'profile-bio-clamped'}`}>{currentUser.biografia}</p>
+            {(bioTruncated || bioExpanded) && (
+              <button type="button" className="profile-bio-expand" aria-expanded={bioExpanded}
+                aria-controls="profile-biography-text" onClick={() => setBioExpanded((expanded) => !expanded)}>
+                {bioExpanded ? 'Ver menos' : 'Ver más'}
+              </button>
+            )}
+          </div>
         ) : (
-          /* MODO VISTA DE PERFIL */
-          <div className="profile-view-details">
-            <div className="profile-info-section">
-              <h3 className="section-title">Sobre mí</h3>
-              <p className="profile-bio-text">
-                {currentUser?.biografia ||
-                  'Aún no has agregado una descripción a tu perfil. Haz clic en "Editar Perfil" para agregarla y conseguir más conexiones.'}
-              </p>
-            </div>
+          <div className="profile-about-empty">
+            <p>Todavía no agregaste una biografía.</p>
+            <p className="section-subtitle">Contale algo sobre vos a las personas que visiten tu perfil.</p>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={openBioEditor}>+ Agregar biografía</button>
           </div>
         )}
+      </section>
 
-      </div>
+      {isEditing && createPortal(
+        <div className="modal profile-editor-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-editor-title"
+          onClick={(event) => { if (event.target === event.currentTarget && !loading) setIsEditing(false); }}>
+          <div className="modal-dialog profile-editor-dialog" ref={modalRef}>
+            <div className="modal-header">
+              <h3 id="profile-editor-title">Editar perfil</h3>
+              <button type="button" className="btn-close" aria-label="Cerrar modal" disabled={loading} onClick={() => setIsEditing(false)} autoFocus>&times;</button>
+            </div>
+            <form onSubmit={handleSaveProfile} aria-busy={loading}>
+              <div className="modal-body">
+                <fieldset disabled={loading} className="profile-editor-fields">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="perfil-nombre">Nombre</label>
+                      <input id="perfil-nombre"
+                        type="text"
+                        className="form-control"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="perfil-apellido">Apellido</label>
+                      <input id="perfil-apellido"
+                        type="text"
+                        className="form-control"
+                        value={apellido}
+                        onChange={(e) => setApellido(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="perfil-email">Correo Electrónico</label>
+                      <input id="perfil-email"
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="perfil-ubicacion">Ubicación</label>
+                      <select id="perfil-ubicacion"
+                        className="form-control"
+                        value={ubicacionId}
+                        onChange={(e) => setUbicacionId(e.target.value)}
+                      >
+                        <option value="">Seleccionar ciudad...</option>
+                        {ubicaciones.map((ub) => (
+                          <option key={ub.id} value={ub.id}>
+                            {ub.ciudad}, {ub.provincia} ({ub.pais})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="perfil-genero">Género</label>
+                    <select id="perfil-genero" className="form-control" value={genero}
+                      onChange={(event) => setGenero(event.target.value)} disabled={loading}>
+                      <option value="">Sin especificar</option>
+                      {GENEROS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </div>
+
+                </fieldset>
+                {profileError && <p className="profile-save-error" role="alert">{profileError}</p>}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" disabled={loading} onClick={() => setIsEditing(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Guardando…' : 'Guardar cambios'}</button>
+              </div>
+            </form>
+          </div>
+        </div>, document.body
+      )}
 
         {currentUser?.id && (
           <PreferenciasSection key={currentUser.id} usuarioId={currentUser.id}
@@ -643,78 +702,11 @@ export default function MiPerfilTab({
             <span className="badge badge-tag">{localHobbyIds.length} seleccionados</span>
           </div>
 
-          {/* Barra de Búsqueda y Filtros por Categoría */}
-          <div className="hobbies-filter-toolbar">
-            <div className="hobbies-search-box">
-              <span className="hobbies-search-icon">🔍</span>
-              <input
-                type="text"
-                className="hobbies-search-input"
-                placeholder="Buscar hobbie (ej. fútbol, música, cocina)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="hobbies-search-clear"
-                  onClick={() => setSearchQuery('')}
-                  title="Limpiar búsqueda"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Categorías de Hobbies */}
-            <div className="hobbies-category-chips-row">
-              {HOBBIE_CATEGORIES.map((cat) => {
-                const isActive = selectedCategory === cat.id;
-                let count = 0;
-                if (cat.id === 'all') {
-                  count = hobbies.length;
-                } else if (cat.id === 'mine') {
-                  count = localHobbyIds.length;
-                } else if (cat.keywords) {
-                  count = hobbies.filter((h) =>
-                    cat.keywords.some((k) => (h.nombre || '').toLowerCase().includes(k))
-                  ).length;
-                }
-
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    className={`hobby-category-filter-btn ${isActive ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat.id)}
-                  >
-                    <span>{cat.icon} {cat.label}</span>
-                    <span className="category-filter-count">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Grilla de Hobbies Filtrados */}
-          {filteredHobbies.length === 0 ? (
-            <div className="hobbies-empty-filter-state">
-              <span style={{ fontSize: '2rem' }}>🔎</span>
-              <p>No se encontraron hobbies que coincidan con tu búsqueda.</p>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                }}
-              >
-                Restablecer filtros
-              </button>
-            </div>
+          {hobbies.length === 0 ? (
+            <p className="hobbies-empty-filter-state">No hay hobbies disponibles.</p>
           ) : (
             <div className="interactive-hobbies-grid">
-              {filteredHobbies.map((h) => {
+              {hobbies.map((h) => {
                 const isSelected = localHobbyIds.includes(h.id);
                 return (
                   <button

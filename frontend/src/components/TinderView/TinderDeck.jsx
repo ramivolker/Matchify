@@ -230,15 +230,12 @@ export default function TinderDeck({
 
   const isCommonHobby = (hobbie) => myHobbyIds.includes(hobbie.id);
 
-  // Los hobbies en común se muestran primero (manteniendo el orden original dentro de cada grupo)
-  const sortedUserHobbies = [...userHobbies].sort(
-    (a, b) => Number(isCommonHobby(b)) - Number(isCommonHobby(a))
-  );
-
-  const commonCount = sortedUserHobbies.filter(isCommonHobby).length;
+  const commonHobbies = userHobbies.filter(isCommonHobby);
+  const sortedUserHobbies = [...commonHobbies, ...userHobbies.filter((hobbie) => !isCommonHobby(hobbie))];
+  const commonCount = commonHobbies.length;
 
   const generoLabel = GENEROS.find(({ value }) => value === activeProfile?.genero)?.label;
-  const visibleHobbies = sortedUserHobbies.slice(0, 4);
+  const visibleHobbies = sortedUserHobbies.slice(0, userHobbies.length > 6 ? 5 : 6);
   const remainingHobbies = Math.max(0, userHobbies.length - visibleHobbies.length);
 
   // Dynamic card drag styles
@@ -325,9 +322,9 @@ export default function TinderDeck({
                     </span>;
                   })}
                   {remainingHobbies > 0 && <span className="tinder-chip tinder-chip-more" aria-label={`${remainingHobbies} hobbies adicionales`}>+{remainingHobbies}</span>}
-                  {!userHobbies.length && <span className="tinder-common-hint">Sin hobbies especificados</span>}
+                  {!userHobbies.length && <span className="tinder-hobbies-empty">Sin hobbies especificados</span>}
                 </div>
-                {commonCount > 0 && <p className="tinder-common-hint">{commonCount} {commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}</p>}
+                <p className="tinder-common-hint">{commonCount === 0 ? 'Sin hobbies en común' : `${commonCount} ${commonCount === 1 ? 'hobbie en común' : 'hobbies en común'}`}</p>
               </section>
               <div className="tinder-profile-actions">
                 <button type="button" className="tinder-detail-btn" disabled={pending || disabled}

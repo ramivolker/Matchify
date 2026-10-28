@@ -334,6 +334,22 @@ body {
   width: 100%;
 }
 
+.main-content-centered {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.main-content-centered > .app-view-container {
+  flex-shrink: 0;
+  width: 100%;
+  margin-block: auto;
+}
+
+@media (max-width: 767px) {
+  .main-content-centered { min-height: calc(100dvh - 60px); }
+}
+
 .top-header {
   display: flex;
   justify-content: space-between;
@@ -2066,6 +2082,48 @@ body {
   align-self: flex-start;
 }
 
+.profile-about-card { padding: 24px 32px; }
+.profile-tab-wrapper > .profile-section-card:first-child .profile-header-banner { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
+.profile-about-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.profile-about-header .section-title { margin: 0; }
+.profile-about-editor { width: 100%; height: 115px; min-height: 115px; resize: vertical; }
+.profile-about-card .profile-bio-text,
+[data-theme="dark"] .profile-about-card .profile-bio-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dark);
+  line-height: 1.65;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.profile-bio-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+.profile-bio-expand { display: block; margin-top: 0.5rem; padding: 0.25rem 0; border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.profile-bio-expand:hover { color: var(--primary); }
+.profile-bio-expand:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.profile-about-empty { color: var(--text-muted); }
+.profile-about-empty .section-subtitle { margin-top: 0.4rem; }
+.profile-save-error { color: var(--danger); margin-top: 0.75rem; font-size: 0.9rem; }
+.profile-editor-overlay { padding: 1rem; }
+.profile-editor-dialog { max-height: calc(100dvh - 2rem); }
+.profile-editor-dialog > form { min-height: 0; display: flex; flex-direction: column; }
+.profile-editor-dialog .modal-body { max-height: none; min-height: 0; overflow-y: auto; }
+.profile-editor-dialog .modal-header, .profile-editor-dialog .modal-footer { flex-shrink: 0; }
+.profile-editor-fields { border: 0; padding: 0; min-width: 0; }
+.profile-editor-fields .form-group { min-width: 0; }
+
+@media (max-width: 600px) {
+  .profile-section-card.profile-about-card { padding: 24px; }
+  .profile-editor-dialog .form-row { grid-template-columns: 1fr; flex-direction: column; }
+  .profile-about-card .form-actions-row { flex-wrap: wrap; }
+  .profile-about-card .form-actions-row .btn { flex: 1 1 auto; }
+}
+
 .section-title {
   font-size: 1.15rem;
   font-weight: 800;
@@ -2325,6 +2383,46 @@ body {
   border: 1px solid rgba(0, 245, 212, 0.32);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip {
+  background: #292b31;
+  border: 1.5px solid #454955;
+  color: #e5e7eb;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip:hover {
+  background: #32353d;
+  border-color: #826071;
+  transform: none;
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip.selected {
+  background: rgba(255, 42, 109, 0.15);
+  border-color: var(--primary);
+  color: #ff9cbb;
+  box-shadow: 0 1px 3px rgba(255, 42, 109, 0.08);
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip.selected:hover {
+  background: rgba(255, 42, 109, 0.22);
+  border-color: #ff6594;
+  box-shadow: 0 2px 6px rgba(255, 42, 109, 0.12);
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-chip-icon { color: inherit; }
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip:focus-visible {
+  outline: 2px solid #ff9cbb;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .profile-hobbies-section .hobby-select-chip { transition: none; }
 }
 
 [data-theme="dark"] .tinder-chip.match-chip {
@@ -4300,8 +4398,11 @@ body {
 .tinder-metadata span + span::before { content: '\00b7'; margin-right: 0.5rem; }
 .tinder-section-title { font-size: 0.9rem; font-weight: 700; margin: 0 0 0.45rem; color: var(--text-dark); }
 .tinder-bio { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; height: 4.65em; min-height: 0; }
-.tinder-hobbies-section { height: 105px; overflow: hidden; }
-.tinder-hobbies-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 29px; gap: 0.4rem; }
+.tinder-hobbies-section { height: auto; overflow: visible; }
+.tinder-hobbies-section .tinder-section-title, .tinder-hobbies-section > .tinder-common-hint { margin: 0; }
+.tinder-hobbies-section > .tinder-common-hint { margin-top: 12px; line-height: 1.5; }
+.tinder-hobbies-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 29px; gap: 0.4rem; align-content: start; margin-top: 0.45rem; }
+.tinder-hobbies-empty { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.72rem; }
 .tinder-chip { border-radius: var(--radius-full); padding: 0.3rem 0.65rem; font-size: 0.75rem; font-weight: 600; color: #008775; background: var(--secondary-light); border: 1px solid rgba(0, 245, 212, 0.28); max-width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tinder-chip.match-chip { color: var(--primary); background: var(--primary-light); border-color: rgba(255, 42, 109, 0.3); }
 .tinder-chip-more { color: var(--text-muted); background: var(--bg-main); border-color: var(--border); flex-shrink: 0; }
@@ -4373,18 +4474,6 @@ body {
     overflow: visible;
   }
   .tinder-hobbies-section { height: auto; overflow: visible; }
-  .tinder-hobbies-chips {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: auto;
-    align-items: stretch;
-  }
-  .tinder-hobbies-chips .tinder-chip {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    overflow-wrap: anywhere;
-    line-height: 1.4;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4403,8 +4492,24 @@ body {
 /* Compact profile actions remain centered on mobile as well as desktop. */
 .modal.profile-actions-overlay { padding: 1rem; align-items: center; }
 .profile-actions-overlay .profile-actions-dialog { max-width: 380px; border-radius: var(--radius-lg); max-height: calc(100dvh - 2rem); overflow-y: auto; }
-.profile-actions-options { display: grid; gap: 0.75rem; }
-.profile-actions-options .btn { min-height: 44px; }
+.profile-actions-dialog .modal-header { padding: 1.25rem 1.25rem 0.75rem; border-bottom: 0; gap: 0.75rem; }
+.profile-actions-dialog .modal-header h3 { font-size: 1.1rem; letter-spacing: -0.02em; }
+.profile-actions-dialog .btn-close { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--radius-sm); }
+.profile-actions-options { display: grid; gap: 0.625rem; padding: 0.5rem 1.25rem; }
+.profile-action-button { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 56px; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-main); color: var(--text-dark); font: inherit; font-size: 0.9rem; font-weight: 600; text-align: left; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+.profile-action-icon { display: grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0; }
+.profile-action-block { color: var(--danger); background: var(--danger-light); border-color: transparent; }
+.profile-action-block:hover { border-color: var(--danger); }
+.profile-action-report .profile-action-icon { color: var(--text-muted); }
+.profile-action-report:hover { border-color: var(--text-muted); background: var(--card-bg); }
+.profile-action-button:active { transform: scale(0.985); }
+.profile-actions-dialog .profile-actions-cancel-footer { padding: 0.25rem 1.25rem 1rem; background: transparent; border-top: 0; justify-content: center; }
+.profile-actions-cancel { min-height: 40px; padding: 0.5rem 1rem; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
+.profile-actions-cancel:hover, .profile-actions-cancel:active { color: var(--text-dark); background: var(--bg-main); }
+.profile-action-button:focus-visible, .profile-actions-cancel:focus-visible, .profile-actions-dialog .btn-close:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .profile-action-button, .profile-actions-cancel { transition: none; }
+}
 .profile-actions-hint { margin-top: 0.75rem; color: var(--text-muted); font-size: 0.9rem; }
 
 
