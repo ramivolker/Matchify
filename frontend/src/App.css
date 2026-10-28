@@ -2316,6 +2316,46 @@ body {
   -webkit-backdrop-filter: blur(8px);
 }
 
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip {
+  background: #292b31;
+  border: 1.5px solid #454955;
+  color: #e5e7eb;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip:hover {
+  background: #32353d;
+  border-color: #826071;
+  transform: none;
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip.selected {
+  background: rgba(255, 42, 109, 0.15);
+  border-color: var(--primary);
+  color: #ff9cbb;
+  box-shadow: 0 1px 3px rgba(255, 42, 109, 0.08);
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip.selected:hover {
+  background: rgba(255, 42, 109, 0.22);
+  border-color: #ff6594;
+  box-shadow: 0 2px 6px rgba(255, 42, 109, 0.12);
+}
+
+[data-theme="dark"] .profile-hobbies-section .hobby-chip-icon { color: inherit; }
+
+[data-theme="dark"] .profile-hobbies-section .hobby-select-chip:focus-visible {
+  outline: 2px solid #ff9cbb;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .profile-hobbies-section .hobby-select-chip { transition: none; }
+}
+
 [data-theme="dark"] .tinder-chip.match-chip {
   background: linear-gradient(135deg, #FF2A6D, #FF5B8D);
   color: #FFFFFF;
