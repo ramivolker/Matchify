@@ -587,7 +587,7 @@ export default function App() {
       />
 
       {/* Contenido Principal */}
-      <main className="main-content">
+      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''}`}>
         {/* =========================================================================
             VISTA 1: EXCLUSIVA PARA ADMINISTRADOR
             ========================================================================= */}
