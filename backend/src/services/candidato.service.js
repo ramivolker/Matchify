@@ -78,6 +78,7 @@ const obtenerCandidatos = async (usuarioId) => {
       genero: usuario.genero,
       ubicacion: usuario.ubicacion,
       tipoUsuario: usuario.tipoUsuario,
+      fotos: usuario.fotos || [],
       hobbies: usuario.hobbies.map((asociacion) => asociacion.hobbie),
       distanciaKm: Number(distanciaKm.toFixed(2)),
     });

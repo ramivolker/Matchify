@@ -4,7 +4,7 @@ import { profileAge } from '../../utils/profileAge';
 import { api } from '../../services/api';
 import PreferenciasSection from './PreferenciasSection';
 import { getHobbieEmoji } from '../../utils/hobbieUtils';
-import { getUserAvatar } from '../../utils/userAvatarUtils';
+import { getUserAvatar, getUserPhotos } from '../../utils/userAvatarUtils';
 import UserAvatar from '../common/UserAvatar';
 import AvatarPickerModal from './AvatarPickerModal';
 import { GENEROS } from '../../utils/generoUtils';
@@ -120,6 +120,132 @@ export default function MiPerfilTab({
 
   const [localHobbyIds, setLocalHobbyIds] = useState(() => extractHobbyIds(currentUser));
   const [busyHobbyId, setBusyHobbyId] = useState(null);
+
+  // ── Fotos de perfil (galería) ────────────────────────────────
+  const [fotos, setFotos] = useState(() => {
+    const list = currentUser?.fotos;
+    if (Array.isArray(list) && list.length > 0) return list;
+    return getUserPhotos(currentUser).map((url, i) => ({ id: `local-${i}`, url, orden: i }));
+  });
+  const [fotosLoading, setFotosLoading] = useState(false);
+
+  // Cargar fotos del backend cuando cambia el usuario
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    let cancelled = false;
+    api.getFotos(currentUser.id)
+      .then((data) => {
+        if (!cancelled) setFotos(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        // Fallback a fotos locales si falla la API
+        setFotos(getUserPhotos(currentUser).map((url, i) => ({ id: `local-${i}`, url, orden: i })));
+      });
+    return () => { cancelled = true; };
+  }, [currentUser?.id]);
+
+  const MAX_PHOTOS = 6;
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      onShowToast('Seleccioná un archivo de imagen válido (JPG, PNG, WebP).', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let { width, height } = img;
+        if (width > height) { if (width > MAX) { height *= MAX / width; width = MAX; } }
+        else { if (height > MAX) { width *= MAX / height; height = MAX; } }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+        try {
+          setFotosLoading(true);
+          const nueva = await api.agregarFoto(currentUser.id, { url: dataUrl });
+          setFotos((prev) => [...prev, nueva]);
+          setCurrentAvatarUrl(dataUrl);
+          onShowToast('¡Foto agregada a tu galería! 📸', 'success');
+        } catch (err) {
+          onShowToast(err.message || 'Error al subir la foto', 'error');
+        } finally {
+          setFotosLoading(false);
+          const inputEl = document.getElementById('profile-photo-upload-input');
+          if (inputEl) inputEl.value = '';
+        }
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleEliminarFoto = async (foto) => {
+    if (foto.id?.toString().startsWith('local-')) {
+      setFotos((prev) => prev.filter((f) => f.id !== foto.id));
+      return;
+    }
+    try {
+      setFotosLoading(true);
+      await api.eliminarFoto(currentUser.id, foto.id);
+      setFotos((prev) => prev.filter((f) => f.id !== foto.id));
+      onShowToast('Foto eliminada', 'info');
+    } catch (err) {
+      onShowToast(err.message || 'Error al eliminar la foto', 'error');
+    } finally {
+      setFotosLoading(false);
+    }
+  };
+
+  const handleMarcarPrincipal = async (foto) => {
+    if (foto.id?.toString().startsWith('local-')) {
+      setCurrentAvatarUrl(foto.url);
+      setFotos((prev) => [foto, ...prev.filter((f) => f.id !== foto.id)]);
+      return;
+    }
+    try {
+      setFotosLoading(true);
+      const nuevas = await api.marcarFotoPrincipal(currentUser.id, foto.id);
+      setFotos(Array.isArray(nuevas) ? nuevas : fotos);
+      setCurrentAvatarUrl(foto.url);
+      onShowToast('Foto principal actualizada ✨', 'success');
+    } catch (err) {
+      onShowToast(err.message || 'Error al marcar foto principal', 'error');
+    } finally {
+      setFotosLoading(false);
+    }
+  };
+
+  const handleReordenarFoto = async (index, direccion) => {
+    const nuevoIndex = index + direccion;
+    if (nuevoIndex < 0 || nuevoIndex >= fotos.length || fotosLoading) return;
+    const nuevas = [...fotos];
+    const temp = nuevas[index];
+    nuevas[index] = nuevas[nuevoIndex];
+    nuevas[nuevoIndex] = temp;
+    setFotos(nuevas);
+
+    const ids = nuevas.map((f) => f.id).filter((id) => typeof id === 'number');
+    if (ids.length === nuevas.length) {
+      try {
+        setFotosLoading(true);
+        const res = await api.reordenarFotos(currentUser.id, ids);
+        setFotos(res);
+        if (res[0]?.url) setCurrentAvatarUrl(res[0].url);
+        onShowToast('Orden actualizado ✨', 'info');
+      } catch (err) {
+        console.warn('Error reordenando fotos:', err);
+      } finally {
+        setFotosLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     setLocalHobbyIds(extractHobbyIds(currentUser));
@@ -450,6 +576,120 @@ export default function MiPerfilTab({
             onSaved={onPreferencesUpdated} onShowToast={onShowToast} />
         )}
 
+        {/* ── SECCIÓN DE FOTOS DE PERFIL ── */}
+        <div className="profile-section-card profile-photos-section">
+          <div className="section-header-flex">
+            <div>
+              <h3 className="section-title">Fotos del perfil</h3>
+              <p className="section-subtitle">
+                La primera foto es tu foto principal. Podés tener hasta {MAX_PHOTOS} fotos y ordenarlas como quieras.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="badge badge-tag">{fotos.length}/{MAX_PHOTOS}</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsAvatarModalOpen(true)}
+                title="Abrir gestor de fotos"
+              >
+                Gestionar fotos
+              </button>
+            </div>
+          </div>
+
+          <div className="profile-photos-grid">
+            {fotos.map((foto, idx) => (
+              <div
+                key={foto.id}
+                className={`photo-thumb-wrapper ${idx === 0 ? 'is-main' : ''}`}
+              >
+                <img
+                  src={foto.url}
+                  alt={`Foto ${idx + 1}`}
+                  className="photo-thumb-img"
+                  loading="lazy"
+                />
+                {idx === 0 && (
+                  <span className="photo-main-badge">Principal</span>
+                )}
+                <div className="photo-thumb-actions">
+                  <div className="photo-thumb-reorder-row">
+                    <button
+                      type="button"
+                      className="photo-thumb-arrow-btn"
+                      onClick={() => handleReordenarFoto(idx, -1)}
+                      disabled={idx === 0 || fotosLoading}
+                      title="Mover a la izquierda"
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="photo-thumb-arrow-btn"
+                      onClick={() => handleReordenarFoto(idx, 1)}
+                      disabled={idx === fotos.length - 1 || fotosLoading}
+                      title="Mover a la derecha"
+                    >
+                      ▶
+                    </button>
+                  </div>
+                  {idx !== 0 && (
+                    <button
+                      type="button"
+                      className="photo-thumb-action-btn"
+                      onClick={() => handleMarcarPrincipal(foto)}
+                      disabled={fotosLoading}
+                      title="Usar como foto principal"
+                    >
+                      ⭐ Principal
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="photo-thumb-action-btn danger"
+                    onClick={() => handleEliminarFoto(foto)}
+                    disabled={fotosLoading}
+                    title="Eliminar foto"
+                  >
+                    🗑 Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Botón de agregar foto */}
+            {fotos.length < MAX_PHOTOS && (
+              <>
+                <input
+                  id="profile-photo-upload-input"
+                  type="file"
+                  accept="image/*"
+                  className="photo-upload-input"
+                  onChange={handleFileUpload}
+                  disabled={fotosLoading}
+                />
+                <button
+                  type="button"
+                  className="photo-add-btn"
+                  onClick={() => document.getElementById('profile-photo-upload-input')?.click()}
+                  disabled={fotosLoading}
+                  title="Agregar foto"
+                >
+                  <span>{fotosLoading ? '⏳' : '+'}</span>
+                  <span className="add-label">{fotosLoading ? 'Subiendo...' : 'Agregar'}</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          {fotos.length === 0 && (
+            <p className="photos-hint">
+              Todavía no tenés fotos. Subí al menos una para que tu perfil sea más atractivo.
+            </p>
+          )}
+        </div>
+
         {/* SECCIÓN DE HOBBIES DEL USUARIO */}
         <div className="profile-section-card profile-hobbies-section">
           <div className="section-header-flex">
@@ -484,14 +724,16 @@ export default function MiPerfilTab({
             </div>
           )}
         </div>
-      {/* Modal para cambiar foto de perfil o avatar */}
+      {/* Modal para administrar y cargar fotos de perfil */}
       <AvatarPickerModal
         currentUser={currentUser}
-        currentAvatar={currentAvatarUrl}
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
         onAvatarSaved={(newAvatar) => {
           setCurrentAvatarUrl(newAvatar);
+        }}
+        onFotosUpdated={(newFotos) => {
+          setFotos(newFotos);
         }}
         onShowToast={onShowToast}
       />

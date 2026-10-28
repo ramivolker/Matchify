@@ -11,7 +11,9 @@ export default function NavbarMobile({
   return (
     <header className="mobile-nav-bar">
       <div className="brand">
-        <div className="logo-icon">{isAdmin ? '🛡️' : '🔥'}</div>
+        <div className="sidebar-brand-logo-container">
+          <img src="/logo.png" alt="Matchify Logo" className="sidebar-brand-logo-img" />
+        </div>
         <div className="brand-text">
           <h1>Matchify</h1>
           {isAdmin && <span className="badge-dev badge-admin">Admin</span>}

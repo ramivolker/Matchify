@@ -1,4 +1,6 @@
 import React from 'react';
+import UserAvatar from './common/UserAvatar';
+import adminAvatarImg from '../assets/admin-avatar.png';
 
 export default function Sidebar({
   session,
@@ -28,7 +30,9 @@ export default function Sidebar({
         {/* Marca y Botón de cierre en móvil */}
         <div className="brand sidebar-brand">
           <div className="brand-info">
-            <div className="logo-icon">{isAdmin ? '🛡️' : '🔥'}</div>
+            <div className="sidebar-brand-logo-container">
+              <img src="/logo.png" alt="Matchify Logo" className="sidebar-brand-logo-img" />
+            </div>
             <div className="brand-text">
               <h1>Matchify</h1>
               <span className={`badge-dev ${isAdmin ? 'badge-admin' : ''}`}>
@@ -42,12 +46,28 @@ export default function Sidebar({
         </div>
 
         {/* Tarjeta de Usuario Activo en Sesión */}
-        <div className="sidebar-user-card">
-          <div className="sidebar-user-avatar">
-            {isAdmin
-              ? '👑'
-              : `${currentUser?.nombre?.charAt(0) || 'U'}${currentUser?.apellido?.charAt(0) || ''}`.toUpperCase()}
-          </div>
+        <div
+          className={`sidebar-user-card ${!isAdmin ? 'clickable' : ''}`}
+          onClick={!isAdmin ? () => { setCurrentUserTab('perfil'); onClose(); } : undefined}
+          title={!isAdmin ? 'Ir a Mi Perfil' : undefined}
+          role={!isAdmin ? 'button' : undefined}
+          tabIndex={!isAdmin ? 0 : undefined}
+        >
+          {isAdmin ? (
+            <div className="sidebar-admin-avatar-container">
+              <img
+                src={adminAvatarImg}
+                alt="Administrador"
+                className="sidebar-admin-avatar-img"
+              />
+            </div>
+          ) : (
+            <UserAvatar
+              user={currentUser}
+              size="sm"
+              className="sidebar-user-avatar-custom"
+            />
+          )}
           <div className="sidebar-user-info">
             <span className="sidebar-user-name">
               {isAdmin ? 'Administrador' : `${currentUser?.nombre} ${currentUser?.apellido}`}
