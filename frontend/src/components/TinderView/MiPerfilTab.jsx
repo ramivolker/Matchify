@@ -44,7 +44,24 @@ export default function MiPerfilTab({
   onProfileUpdated,
   onPreferencesUpdated,
   onShowToast,
+  scrollToPreferences = false,
+  onPreferencesFocused,
 }) {
+  useEffect(() => {
+    if (!scrollToPreferences || !currentUser?.id) return;
+    const frame = requestAnimationFrame(() => {
+      const section = document.getElementById('preferencias-busqueda');
+      if (!section) return;
+      section.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+      section.focus({ preventScroll: true });
+      onPreferencesFocused?.();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scrollToPreferences, currentUser?.id, onPreferencesFocused]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
