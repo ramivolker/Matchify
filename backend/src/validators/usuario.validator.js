@@ -71,4 +71,9 @@ const validarUsuario = (datos) => {
   }
 };
 
-module.exports = { validarUsuario, validarId };
+const validarEstado = (datos) => {
+  if (!datos || typeof datos !== 'object' || Array.isArray(datos) || Object.keys(datos).length !== 1 || typeof datos.activo !== 'boolean') {
+    throw new ValidationError('Se requiere solamente el campo activo de tipo booleano');
+  }
+};
+module.exports = { validarUsuario, validarId, validarEstado };

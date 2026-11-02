@@ -1,3 +1,4 @@
+const { validarUsuarioActivo } = require('./usuario-activo.service');
 const fotoRepository = require("../repositories/foto.repository");
 const usuarioRepository = require("../repositories/usuario.repository");
 const { validarFoto, validarFotoId, validarUsuarioId } = require("../validators/foto.validator");
@@ -16,6 +17,7 @@ const obtenerPorUsuario = async (usuarioId) => {
 
 const agregarFoto = async (usuarioId, datos) => {
   validarUsuarioId(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   const usuario = await usuarioRepository.obtenerPorId(usuarioId);
   if (!usuario) {
     throw new NotFoundError("Usuario no encontrado");
@@ -38,6 +40,7 @@ const agregarFoto = async (usuarioId, datos) => {
 
 const agregarFotosMultiples = async (usuarioId, fotos) => {
   validarUsuarioId(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   const usuario = await usuarioRepository.obtenerPorId(usuarioId);
   if (!usuario) {
     throw new NotFoundError("Usuario no encontrado");
@@ -70,6 +73,7 @@ const agregarFotosMultiples = async (usuarioId, fotos) => {
 
 const eliminarFoto = async (usuarioId, fotoId) => {
   validarUsuarioId(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   validarFotoId(fotoId);
 
   const foto = await fotoRepository.obtenerPorId(fotoId);
@@ -96,6 +100,7 @@ const eliminarFoto = async (usuarioId, fotoId) => {
 
 const marcarPrincipal = async (usuarioId, fotoId) => {
   validarUsuarioId(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   validarFotoId(fotoId);
 
   const foto = await fotoRepository.obtenerPorId(fotoId);
@@ -128,6 +133,7 @@ const marcarPrincipal = async (usuarioId, fotoId) => {
 
 const reordenarFotos = async (usuarioId, fotosIds) => {
   validarUsuarioId(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   if (!Array.isArray(fotosIds) || fotosIds.length === 0) {
     throw new ValidationError("Se requiere una lista de IDs de fotos para reordenar");
   }

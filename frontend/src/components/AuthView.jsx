@@ -26,11 +26,10 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
 
     setLoading(true);
     setTimeout(() => {
-      // 1. Verificación de Administrador (acepta "admin", "admin@matchify.com", etc.)
+      // Acceso administrativo de demostracion, sin autenticacion productiva.
       const isExplicitAdmin =
         cleanEmail === 'admin' ||
-        cleanEmail === 'admin@matchify.com' ||
-        cleanEmail.includes('admin');
+        cleanEmail === 'admin@matchify.com';
 
       if (isExplicitAdmin) {
         onLogin({
@@ -55,6 +54,11 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
         (u) => u.email.toLowerCase() === cleanEmail
       );
 
+      if (existingUser && existingUser.activo !== true) {
+        onShowToast('La cuenta está desactivada. No podés utilizar Matchify.', 'error');
+        setLoading(false);
+        return;
+      }
       if (existingUser) {
         onLogin({
           role: 'user',
@@ -68,18 +72,7 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
             'error'
           );
         } else {
-          // Si la base de datos está vacía, crear sesión de usuario demo
-          onLogin({
-            role: 'user',
-            user: {
-              id: 1,
-              nombre: cleanEmail.split('@')[0] || 'Usuario',
-              apellido: 'Matchify',
-              email: cleanEmail,
-              biografia: 'Nuevo usuario en Matchify',
-              activo: true,
-            },
-          });
+          onShowToast('No hay usuarios disponibles. Registrate para continuar.', 'error');
         }
       }
       setLoading(false);
@@ -136,6 +129,7 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
   };
 
   const handleQuickLoginUser = (usuario) => {
+    if (usuario.activo !== true) { onShowToast('La cuenta está desactivada.', 'error'); return; }
     setEmail(usuario.email);
     setPassword('123456');
     onLogin({
@@ -220,7 +214,7 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
                   <div className="quick-user-select-box">
                     <span className="quick-user-label">👤 Ingresar como Usuario:</span>
                     <div className="quick-user-chips">
-                      {usuarios.slice(0, 5).map((u) => (
+                      {usuarios.filter((u) => u.activo === true).slice(0, 5).map((u) => (
                         <button
                           key={u.id}
                           type="button"

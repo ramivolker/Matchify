@@ -13,7 +13,7 @@ const candidatos = [
 ];
 require.cache[require.resolve('../src/config/prisma')] = { exports: {
   usuario: {
-    findUnique: async ({ where }) => where.id === 1 ? { id: 1, ubicacion, preferencia } : null,
+    findUnique: async ({ where }) => where.id === 1 ? { id: 1, activo: true, ubicacion, preferencia } : null,
     findMany: async ({ where }) => {
       assert.equal(where.id.not, 1);
       assert.equal(where.activo, true);

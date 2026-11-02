@@ -1,7 +1,9 @@
+const { validarUsuarioActivo } = require('./usuario-activo.service');
 const bloqueoRepository = require("../repositories/bloqueo.repository");
 const matchRepository = require("../repositories/match.repository");
 
 async function bloquearUsuario(usuarioBloqueadorId, usuarioBloqueadoId) {
+  await validarUsuarioActivo(usuarioBloqueadorId);
   if (!usuarioBloqueadorId || !usuarioBloqueadoId) {
     throw new Error("Los IDs de los usuarios son obligatorios");
   }
@@ -33,10 +35,12 @@ async function bloquearUsuario(usuarioBloqueadorId, usuarioBloqueadoId) {
 }
 
 async function obtenerBloqueados(usuarioId) {
+  await validarUsuarioActivo(usuarioId);
   return bloqueoRepository.obtenerBloqueosDeUsuario(usuarioId);
 }
 
 async function desbloquearUsuario(usuarioBloqueadorId, usuarioBloqueadoId) {
+  await validarUsuarioActivo(usuarioBloqueadorId);
   const bloqueoExistente = await bloqueoRepository.buscarBloqueo(
     usuarioBloqueadorId,
     usuarioBloqueadoId

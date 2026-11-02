@@ -18,6 +18,7 @@ function mount(Component, props) {
       if (!(index in slots)) slots[index] = typeof initial === 'function' ? initial() : initial;
       return [slots[index], (value) => { slots[index] = typeof value === 'function' ? value(slots[index]) : value; }];
     },
+    useRef(initial) { const index = cursor++; if (!(index in slots)) slots[index] = { current: initial }; return slots[index]; },
     useEffect(callback, deps) {
       const index = cursor++;
       if (!slots[index] || deps.some((value, i) => value !== slots[index][i])) {
@@ -59,18 +60,23 @@ const text = (node) => Array.isArray(node) ? node.map(text).join('') :
   node?.props ? text(node.props.children) : typeof node === 'string' ? node : '';
 const button = (label) => (node) => node.type === 'button' && text(node).trim().replace(/^[✓+]\s*/, '') === label;
 
-test('géneros en formularios: selección, Todos, cancelar, guardar y recargar', async () => {
+test('géneros en formularios: selección, Todos, cancelar, guardar y recargar', async (t) => {
+  const oldDocument = global.document;
+  global.document = { body: {}, addEventListener() {}, removeEventListener() {} };
+  t.after(() => { global.document = oldDocument; });
   const frontend = path.resolve(__dirname, '../../frontend');
   const bundle = await build({
     stdin: { contents: `export { default as Preferences } from './src/components/TinderView/PreferenciasSection.jsx';
       export { default as Profile } from './src/components/TinderView/MiPerfilTab.jsx';
       export { api } from './src/services/api.js';`, resolveDir: frontend },
-    bundle: true, platform: 'node', format: 'cjs', external: ['react'], write: false,
+    bundle: true, platform: 'node', format: 'cjs', external: ['react', 'react-dom'], write: false,
   });
   const filename = path.join(frontend, 'gender-ui-test.cjs');
   const compiled = new Module(filename, module);
   compiled.filename = filename;
   compiled.paths = Module._nodeModulePaths(frontend);
+  // El harness inspecciona el contenido del portal sin montar un DOM.
+  compiled.require = function (id) { return id === 'react-dom' ? { createPortal: (children) => children } : Module.prototype.require.call(this, id); };
   compiled._compile(bundle.outputFiles[0].text, filename);
   const { Preferences, Profile, api } = compiled.exports;
   let stored;
@@ -120,7 +126,8 @@ test('géneros en formularios: selección, Todos, cancelar, guardar y recargar',
   assert.equal(savedCalls, 3);
 
   const user = { id: 1, nombre: 'Prueba', genero: 'FEMENINO' };
-  api.actualizarUsuario = async (id, data) => { assert.equal(id, 1); Object.assign(user, data); };
+  api.getFotos = async () => [];
+  api.actualizarPerfil = async (id, data) => { assert.equal(id, 1); Object.assign(user, data); };
   const profile = mount(Profile, { currentUser: user, hobbies: [], ubicaciones: [], onProfileUpdated: async () => {}, onShowToast: () => {} });
   profile.find((node) => node.type === 'button' && text(node).includes('Editar Perfil')).props.onClick();
   profile.render(); profile.render();
@@ -134,7 +141,7 @@ test('géneros en formularios: selección, Todos, cancelar, guardar y recargar',
   profile.render(); profile.render();
   assert.equal(select().props.value, 'NO_BINARIO');
   select().props.onChange({ target: { value: 'OTRO' } }); profile.render();
-  profile.find(button('Descartar')).props.onClick(); profile.render();
+  profile.find(button('Cancelar')).props.onClick(); profile.render();
   profile.find((node) => node.type === 'button' && text(node).includes('Editar Perfil')).props.onClick();
   profile.render(); profile.render();
   assert.equal(select().props.value, 'NO_BINARIO');

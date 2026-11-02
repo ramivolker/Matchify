@@ -54,7 +54,7 @@ export default function UsuarioModal({
   };
 
   return (
-    <div className="modal">
+    <div className="modal" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog">
         <div className="modal-header">
           <h3>{usuario ? `Editar Usuario: ${usuario.nombre}` : 'Crear Nuevo Usuario'}</h3>

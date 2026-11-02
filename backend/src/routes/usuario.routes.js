@@ -9,6 +9,8 @@ router.get("/", usuarioController.obtenerTodos);
 
 router.get("/:id", usuarioController.obtenerPorId);
 router.put("/:id", usuarioController.actualizar);
+router.patch('/:id/estado', usuarioController.actualizarEstado);
+router.patch('/:id/perfil', usuarioController.actualizarPerfil);
 router.delete("/:id", usuarioController.eliminar);
 
 module.exports = router;

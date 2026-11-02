@@ -1,3 +1,4 @@
+const { comprobarUsuarioActivo } = require('./usuario-activo.service');
 const repository = require('../repositories/mensaje.repository');
 const { validarId, validarMensaje } = require('../validators/mensaje.validator');
 const NotFoundError = require('../errors/not-found-error');
@@ -8,7 +9,7 @@ const AppError = require('../errors/app-error');
 const comprobarAcceso = async (matchId, usuarioId, tx) => {
   const match = await repository.obtenerMatch(matchId, tx);
   if (!match) throw new NotFoundError('Match no encontrado');
-  if (!await repository.obtenerUsuario(usuarioId, tx)) throw new NotFoundError('Usuario no encontrado');
+  comprobarUsuarioActivo(await repository.obtenerUsuario(usuarioId, tx));
   if (match.usuario1Id !== usuarioId && match.usuario2Id !== usuarioId) {
     throw new AppError('No pertenecés a este match', 403);
   }

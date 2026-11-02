@@ -1,6 +1,7 @@
+const { validarUsuarioActivo } = require('./usuario-activo.service');
 const usuarioRepository = require("../repositories/usuario.repository");
 const ubicacionRepository = require("../repositories/ubicacion.repository");
-const { validarUsuario, validarId } = require("../validators/usuario.validator");
+const { validarUsuario, validarId, validarEstado } = require("../validators/usuario.validator");
 const NotFoundError = require("../errors/not-found-error");
 const ValidationError = require("../errors/validation-error");
 
@@ -72,7 +73,23 @@ const eliminar = async (id) => {
   return usuarioRepository.eliminar(id);
 };
 
+const actualizarEstado = async (id, datos) => {
+  validarId(id);
+  validarEstado(datos);
+  await obtenerPorId(id);
+  return usuarioRepository.actualizar(id, { activo: datos.activo });
+};
+const actualizarPerfil = async (id, datos) => {
+  await validarUsuarioActivo(id);
+  if (!datos || Object.keys(datos).some((key) => ['activo', 'tipoUsuarioId'].includes(key))) {
+    throw new ValidationError('El perfil no puede modificar el estado o tipo de cuenta');
+  }
+  return actualizar(id, datos);
+};
+
 module.exports = {
+  actualizarEstado,
+  actualizarPerfil,
   crear,
   obtenerTodos,
   obtenerPorId,

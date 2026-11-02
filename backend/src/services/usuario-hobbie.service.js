@@ -1,3 +1,4 @@
+const { validarUsuarioActivo } = require('./usuario-activo.service');
 const usuarioHobbieRepository = require("../repositories/usuario-hobbie.repository");
 const usuarioRepository = require("../repositories/usuario.repository");
 const hobbieRepository = require("../repositories/hobbie.repository");
@@ -24,7 +25,7 @@ const comprobarHobbie = async (hobbieId) => {
 const asociar = async (usuarioId, hobbieId) => {
   validarUsuarioId(usuarioId);
   validarHobbieId(hobbieId);
-  await comprobarUsuario(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   await comprobarHobbie(hobbieId);
 
   const asociacion = await usuarioHobbieRepository.obtenerAsociacion(usuarioId, hobbieId);
@@ -48,7 +49,7 @@ const obtenerHobbies = async (usuarioId) => {
 const eliminar = async (usuarioId, hobbieId) => {
   validarUsuarioId(usuarioId);
   validarHobbieId(hobbieId);
-  await comprobarUsuario(usuarioId);
+  await validarUsuarioActivo(usuarioId);
   await comprobarHobbie(hobbieId);
 
   const asociacion = await usuarioHobbieRepository.obtenerAsociacion(usuarioId, hobbieId);

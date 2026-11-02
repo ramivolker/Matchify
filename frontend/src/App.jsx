@@ -16,6 +16,7 @@ import ReportModal from './components/ReportModal';
 import ProfileActionsModal from './components/ProfileActionsModal';
 
 // Admin Components & Modals
+import ReportesTab from './components/AdminView/ReportesTab';
 import StatsGrid from './components/AdminView/StatsGrid';
 import DevResetPanel from './components/AdminView/DevResetPanel';
 import UsuariosTab from './components/AdminView/UsuariosTab';
@@ -65,6 +66,32 @@ export default function App() {
     }
   });
 
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [sessionRetry, setSessionRetry] = useState(0);
+  const [sessionError, setSessionError] = useState('');
+  useEffect(() => {
+    if (session?.role !== 'user') { setSessionChecked(true); return; }
+    let cancelled = false;
+    let timer;
+    setSessionChecked(false); setSessionError('');
+    const verify = async () => {
+      try {
+        const user = await api.getUsuario(session.user.id);
+        if (cancelled) return;
+        if (user.activo !== true) {
+          setSession(null); setCurrentTinderUserId(null); setSessionMatches([]); setCandidatos([]); setActiveChatUser(null);
+          cerrarTodosLosModales(); localStorage.removeItem('matchify_session');
+          showToast('La cuenta está desactivada. No podés utilizar Matchify.', 'error');
+          return;
+        }
+        setSessionChecked(true); setSessionError('');
+      } catch (err) { if (!cancelled) { setSessionChecked(false); setSessionError(err.message); } }
+      finally { if (!cancelled) timer = setTimeout(verify, 5000); }
+    };
+    verify();
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [session?.role, session?.user?.id, sessionRetry]);
+
   // Navigation Tabs
   const [currentAdminTab, setCurrentAdminTab] = useState('usuarios');
   const [currentUserTab, setCurrentUserTab] = useState('swipe'); // 'swipe' | 'matches' | 'perfil'
@@ -72,6 +99,28 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Data States
+  const [reportes, setReportes] = useState([]);
+  const [reportesLoading, setReportesLoading] = useState(false);
+  const [reportesError, setReportesError] = useState('');
+  const reportLock = useRef(false);
+  const cargarReportes = async () => {
+    setReportesLoading(true); setReportesError('');
+    try { setReportes(await api.getReportes()); }
+    catch (err) { setReportesError(err.message); }
+    finally { setReportesLoading(false); }
+  };
+  useEffect(() => {
+    if (session?.role !== 'admin') { setReportes([]); return; }
+    let cancelled = false;
+    const refresh = async () => {
+      try { const data = await api.getReportes(); if (!cancelled) { setReportes(data); setReportesError(''); } }
+      catch (err) { if (!cancelled) setReportesError(err.message); }
+      finally { if (!cancelled) setReportesLoading(false); }
+    };
+    setReportesLoading(true); refresh();
+    const timer = setInterval(refresh, 15000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [session?.role]);
   const [usuarios, setUsuarios] = useState([]);
   const [hobbies, setHobbies] = useState([]);
   const [ubicaciones, setUbicaciones] = useState([]);
@@ -107,7 +156,7 @@ export default function App() {
     setSessionMatches([]);
     setCandidatos([]);
     setTinderError('');
-    if (!currentTinderUserId || session?.role !== 'user') return;
+    if (!currentTinderUserId || session?.role !== 'user' || !sessionChecked) return;
     setTinderLoading(true);
     Promise.allSettled([
       api.getCandidatos(currentTinderUserId),
@@ -129,11 +178,11 @@ export default function App() {
       setTinderLoading(false);
     });
     return () => { cancelled = true; };
-  }, [currentTinderUserId, session?.role, currentUserTab, refreshTinder, usuarios]);
+  }, [currentTinderUserId, session?.role, sessionChecked, currentUserTab, refreshTinder, usuarios]);
 
   // Actualizar previews y no leídos sin desmontar el chat ni activar el loader global.
   useEffect(() => {
-    if (!currentTinderUserId || session?.role !== 'user' || currentUserTab !== 'matches') return;
+    if (!currentTinderUserId || session?.role !== 'user' || !sessionChecked || currentUserTab !== 'matches') return;
     const controller = new AbortController();
     let cancelled = false;
     let timer;
@@ -153,7 +202,7 @@ export default function App() {
     };
     timer = setTimeout(refresh, 2500);
     return () => { cancelled = true; clearTimeout(timer); controller.abort(); };
-  }, [currentTinderUserId, session?.role, currentUserTab, usuarios]);
+  }, [currentTinderUserId, session?.role, sessionChecked, currentUserTab, usuarios]);
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -186,7 +235,7 @@ export default function App() {
   }, []);
 
   const cerrarTodosLosModales = () => {
-    if (blockLock.current) return;
+    if (blockLock.current || reportLock.current) return;
     setUsuarioModal({ open: false, data: null });
     setHobbieModal({ open: false, data: null });
     setUbicacionModal({ open: false, data: null });
@@ -265,7 +314,14 @@ export default function App() {
   // =========================================================================
   // AUTH HANDLERS
   // =========================================================================
-  const handleLogin = (sessionData) => {
+  const handleLogin = async (sessionData) => {
+    if (sessionData?.role !== 'admin') {
+      try {
+        const user = await api.getUsuario(sessionData?.user?.id);
+        if (user.activo !== true) throw new Error('La cuenta está desactivada. No podés utilizar Matchify.');
+        sessionData = { ...sessionData, user };
+      } catch (err) { showToast(err.message, 'error'); return; }
+    }
     const isAdm = sessionData?.role === 'admin';
     const safeSession = {
       role: isAdm ? 'admin' : 'user',
@@ -312,7 +368,7 @@ export default function App() {
     return nuevo;
   };
 
-  // Shared by direct blocking and the optional block in the report flow.
+  // Independent action for explicit blocking.
   const handleBlockUser = async (userId) => {
     if (blockLock.current || !currentTinderUserId) return false;
     const actorId = currentTinderUserId;
@@ -345,14 +401,19 @@ export default function App() {
     }
   };
 
-  const handleSubmitReport = async ({ userId, userName, blocked }) => {
-    if (blocked && !await handleBlockUser(userId)) return;
-    showToast((blocked ? 'Has reportado y bloqueado a ' : 'Reporte enviado para ') + userName, 'info');
+  const handleSubmitReport = async ({ userId, reason, details }) => {
+    reportLock.current = true;
+    try {
+      await api.crearReporte({ usuarioReportanteId: currentTinderUserId, usuarioReportadoId: userId, motivo: reason, descripcion: details });
+      showToast('Reporte enviado correctamente', 'success');
+    } catch (err) { showToast(err.message, 'error'); throw err; }
+    finally { reportLock.current = false; }
   };
 
   // Stats calculation
   const totalActivos = usuarios.filter((u) => u.activo !== false).length;
   const stats = {
+    reportesPendientes: reportesError ? '?' : reportes.filter((r) => r.estado === 'PENDIENTE').length,
     totalUsuarios: usuarios.length,
     activos: totalActivos,
     inactivos: usuarios.length - totalActivos,
@@ -517,6 +578,7 @@ export default function App() {
 
   // Header Title Helper
   const getHeaderTitle = () => {
+    if (currentAdminTab === 'reportes') return 'Gestión de Reportes';
     if (currentAdminTab === 'usuarios') return 'Gestión de Usuarios';
     if (currentAdminTab === 'hobbies') return 'Catálogo de Hobbies';
     if (currentAdminTab === 'ubicaciones') return 'Gestión de Ubicaciones';
@@ -552,6 +614,14 @@ export default function App() {
         />
       </div>
     );
+  }
+
+  if (session.role === 'user' && !sessionChecked) {
+    return <div className="auth-root-layout"><Toast toasts={toasts} /><div className="card empty-state" role="status">
+      <p>{sessionError || 'Verificando estado de la cuenta...'}</p>
+      {sessionError && <button className="btn btn-primary" onClick={() => setSessionRetry((n) => n + 1)}>Reintentar</button>}
+      <button className="btn btn-secondary" onClick={handleLogout}>Cerrar sesión</button>
+    </div></div>;
   }
 
   const isAdmin = session.role === 'admin';
@@ -597,7 +667,7 @@ export default function App() {
             <header className="top-header">
               <div className="header-info">
                 <h2>{getHeaderTitle()}</h2>
-                <p>Panel de control y gestión global de la base de datos de Matchify.</p>
+                <p>{currentAdminTab === 'reportes' ? 'Revisá los reportes enviados por los usuarios de Matchify.' : 'Panel de control y gestión global de la base de datos de Matchify.'}</p>
               </div>
               {getPrimaryActionText() && (
                 <div className="header-actions">
@@ -612,9 +682,7 @@ export default function App() {
             </header>
 
             {/* KPI Stats Cards */}
-            <DevResetPanel
-              usuarios={usuarios}
-              currentUserId={currentTinderUserId}
+            {currentAdminTab === 'usuarios' && <DevResetPanel
               onShowToast={showToast}
               onReset={() => {
                 setSeenByUser({});
@@ -625,10 +693,23 @@ export default function App() {
                 setTinderError('');
                 setRefreshTinder((n) => n + 1);
               }}
-            />
-            <StatsGrid stats={stats} onSelectTab={(tab) => setCurrentAdminTab(tab)} />
+            />}
+            {currentAdminTab !== 'reportes' && <StatsGrid stats={stats} onSelectTab={(tab) => setCurrentAdminTab(tab)} />}
 
             {/* Pestañas del Admin */}
+            {currentAdminTab === 'reportes' && <ReportesTab
+              usuarios={usuarios}
+              reportes={reportes} loading={reportesLoading} error={reportesError}
+              onRefresh={cargarReportes} onShowToast={showToast}
+              onUserUpdated={(updated) => {
+                setUsuarios((rows) => rows.map((u) => u.id === updated.id ? { ...u, ...updated } : u));
+                setReportes((rows) => rows.map((r) => ({ ...r,
+                  usuarioReportado: r.usuarioReportado.id === updated.id ? { ...r.usuarioReportado, ...updated } : r.usuarioReportado,
+                  usuarioReportante: r.usuarioReportante.id === updated.id ? { ...r.usuarioReportante, ...updated } : r.usuarioReportante,
+                })));
+              }}
+              onUpdated={(updated) => setReportes((rows) => rows.map((r) => r.id === updated.id ? updated : r))}
+            />}
             {currentAdminTab === 'usuarios' && (
               <UsuariosTab
                 usuarios={usuarios}
@@ -752,6 +833,15 @@ export default function App() {
                 currentUser={currentLoggedInUser}
                 ubicaciones={ubicaciones}
                 hobbies={hobbies}
+                onPhotosUpdated={(userId, fotos) => {
+                  setUsuarios((users) => users.map((user) => user.id === userId ? { ...user, fotos } : user));
+                  setSession((previous) => {
+                    if (previous?.user?.id !== userId) return previous;
+                    const next = { ...previous, user: { ...previous.user, fotos } };
+                    try { localStorage.setItem('matchify_session', JSON.stringify(next)); } catch {}
+                    return next;
+                  });
+                }}
                 onProfileUpdated={cargarTodo}
                 onPreferencesUpdated={() => setRefreshTinder((n) => n + 1)}
                 onShowToast={showToast}
@@ -854,9 +944,10 @@ export default function App() {
       />
 
       <ReportModal
+        key={reportModal.user?.id}
         isOpen={reportModal.open}
         userToReport={reportModal.user}
-        onClose={() => setReportModal({ open: false, user: null })}
+        onClose={() => { if (!reportLock.current) setReportModal({ open: false, user: null }); }}
         onSubmitReport={handleSubmitReport}
       />
     </div>

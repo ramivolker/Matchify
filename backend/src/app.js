@@ -37,6 +37,7 @@ app.use("/api/interacciones", interaccionRoutes);
 app.use("/api/matches", matchRoutes);
 app.use('/api/matches', require('./routes/mensaje.routes'));
 app.use("/api/bloqueos", bloqueoRoutes);
+app.use("/api/reportes", require("./routes/reporte.routes"));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",

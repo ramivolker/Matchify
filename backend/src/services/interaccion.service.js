@@ -1,8 +1,11 @@
+const { validarUsuarioActivo } = require('./usuario-activo.service');
 const interaccionRepository = require("../repositories/interaccion.repository");
 const matchRepository = require("../repositories/match.repository");
 const bloqueoRepository = require("../repositories/bloqueo.repository");
 
 async function crearInteraccion(usuarioEmisorId, usuarioDestinatarioId, tipo) {
+  await validarUsuarioActivo(usuarioEmisorId);
+  await validarUsuarioActivo(usuarioDestinatarioId);
   if (usuarioEmisorId === usuarioDestinatarioId) {
     throw new Error("Un usuario no puede interactuar consigo mismo");
   }

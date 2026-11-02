@@ -2,7 +2,7 @@ const prisma = require('../config/prisma');
 
 const enTransaccion = (operacion) => prisma.$transaction(operacion, { isolationLevel: 'Serializable' });
 const obtenerMatch = (id, tx) => tx.match.findUnique({ where: { id } });
-const obtenerUsuario = (id, tx) => tx.usuario.findUnique({ where: { id }, select: { id: true } });
+const obtenerUsuario = (id, tx) => tx.usuario.findUnique({ where: { id }, select: { id: true, activo: true } });
 const obtenerBloqueo = (a, b, tx) => tx.bloqueo.findFirst({
   where: { OR: [
     { usuarioBloqueadorId: a, usuarioBloqueadoId: b },

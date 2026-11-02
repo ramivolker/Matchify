@@ -35,7 +35,15 @@ const eliminar = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
+const actualizarEstado = asyncHandler(async (req, res) => {
+  res.json(await usuarioService.actualizarEstado(Number(req.params.id), req.body));
+});
+const actualizarPerfil = asyncHandler(async (req, res) => {
+  res.json(await usuarioService.actualizarPerfil(Number(req.params.id), req.body));
+});
 module.exports = {
+  actualizarEstado,
+  actualizarPerfil,
   crear,
   obtenerTodos,
   obtenerPorId,

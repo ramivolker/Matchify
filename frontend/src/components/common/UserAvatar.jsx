@@ -9,24 +9,11 @@ export default function UserAvatar({
   alt = 'Avatar',
 }) {
   const [imgError, setImgError] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(() => customAvatar || getUserAvatar(user));
+  const avatarUrl = customAvatar ?? getUserAvatar(user);
 
   useEffect(() => {
     setImgError(false);
-    setAvatarUrl(customAvatar || getUserAvatar(user));
-  }, [user, customAvatar]);
-
-  // Escuchar actualizaciones dinámicas de avatar
-  useEffect(() => {
-    const handleAvatarUpdate = (e) => {
-      if (user?.id && e.detail?.userId === user.id) {
-        setImgError(false);
-        setAvatarUrl(e.detail.avatarUrl || null);
-      }
-    };
-    window.addEventListener('matchify_avatar_updated', handleAvatarUpdate);
-    return () => window.removeEventListener('matchify_avatar_updated', handleAvatarUpdate);
-  }, [user?.id]);
+  }, [avatarUrl]);
 
   const initials = `${user?.nombre?.charAt(0) || 'U'}${user?.apellido?.charAt(0) || ''}`.toUpperCase();
 

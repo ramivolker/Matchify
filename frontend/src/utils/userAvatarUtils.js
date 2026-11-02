@@ -211,6 +211,7 @@ export const AVATAR_PRESETS = [
 ];
 
 const STORAGE_PREFIX = 'matchify_user_avatar_';
+const fotosOrdenadas = (fotos) => [...fotos].sort((a, b) => (a?.orden ?? 0) - (b?.orden ?? 0));
 
 /**
  * Obtiene la lista completa de fotos de un usuario (para carrusel y navegación)
@@ -219,16 +220,11 @@ export const getUserPhotos = (user) => {
   if (!user) return [];
 
   // 1. Fotos cargadas desde el backend (relación Usuario.fotos)
-  if (Array.isArray(user.fotos) && user.fotos.length > 0) {
-    const urls = user.fotos
+  if (Array.isArray(user.fotos)) {
+    const urls = fotosOrdenadas(user.fotos)
       .map((f) => (typeof f === 'string' ? f : f?.url))
       .filter((u) => u && typeof u === 'string' && u.trim().length > 0);
-    if (urls.length > 0) return urls;
-  }
-
-  // 2. Fotos de la demo por ID de usuario
-  if (user.id && DEMO_USER_PHOTOS[user.id] && DEMO_USER_PHOTOS[user.id].length > 0) {
-    return DEMO_USER_PHOTOS[user.id];
+    return urls;
   }
 
   // 3. Avatar individual como foto única
@@ -243,19 +239,19 @@ export const getUserPhotos = (user) => {
  * 1. Primera foto en user.fotos (si existe)
  * 2. user.avatar explícito
  * 3. localStorage personalizado
- * 4. Foto de demo por ID (coincidente con su género)
- * 5. Fallback por género
+ * Sin foto real, UserAvatar muestra las iniciales.
  */
 export const getUserAvatar = (user) => {
   if (!user) return null;
 
   // 1. Primera foto del array de fotos
-  if (Array.isArray(user.fotos) && user.fotos.length > 0) {
-    const first = user.fotos[0];
+  if (Array.isArray(user.fotos)) {
+    const first = fotosOrdenadas(user.fotos)[0];
     const url = typeof first === 'string' ? first : first?.url;
     if (url && typeof url === 'string' && url.trim()) {
       return url.trim();
     }
+    return null;
   }
 
   // 2. Campo avatar o foto explícito
@@ -277,16 +273,6 @@ export const getUserAvatar = (user) => {
     } catch (e) {
       // Ignorar error de acceso a localStorage
     }
-  }
-
-  // 4. Avatar de demo asignado por ID de usuario (mapeo con género verificado)
-  if (user.id && DEMO_USER_AVATARS[user.id]) {
-    return DEMO_USER_AVATARS[user.id];
-  }
-
-  // 5. Fallback automático según el género del perfil
-  if (user.genero && GENDER_FALLBACK_AVATARS[user.genero]) {
-    return GENDER_FALLBACK_AVATARS[user.genero];
   }
 
   return null;
