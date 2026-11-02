@@ -15,6 +15,24 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
   const [regUbicacionId, setRegUbicacionId] = useState('');
   const [regBio, setRegBio] = useState('');
 
+  // Separar los primeros 5 perfiles de mujeres y 5 de hombres para acceso rápido
+  const mujeres = usuarios
+    .filter((u) => u.genero && u.genero.toUpperCase() === 'FEMENINO')
+    .slice(0, 5);
+  const hombres = usuarios
+    .filter((u) => u.genero && u.genero.toUpperCase() === 'MASCULINO')
+    .slice(0, 5);
+
+  const displayMujeres = mujeres.length > 0 ? mujeres : usuarios.slice(0, 5);
+  const displayHombres =
+    hombres.length > 0 ? hombres : (usuarios.length > 5 ? usuarios.slice(5, 10) : []);
+
+  const getChipDisplayName = (u) => {
+    if (u.apellido === 'Rihanna') return 'Rihanna';
+    if (u.apellido === 'Martínez' && u.nombre === 'Benito') return 'Bad Bunny';
+    return u.nombre;
+  };
+
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
@@ -217,22 +235,45 @@ export default function AuthView({ usuarios = [], ubicaciones = [], onLogin, onR
                 </button>
 
                 {usuarios.length > 0 && (
-                  <div className="quick-user-select-box">
-                    <span className="quick-user-label">👤 Ingresar como Usuario:</span>
-                    <div className="quick-user-chips">
-                      {usuarios.slice(0, 5).map((u) => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          className="user-quick-chip"
-                          onClick={() => handleQuickLoginUser(u)}
-                          title={`Ingresar como ${u.nombre} ${u.apellido}`}
-                        >
-                          {u.nombre}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <>
+                    {displayMujeres.length > 0 && (
+                      <div className="quick-user-select-box">
+                        <span className="quick-user-label">👩 Ingresar como Mujer:</span>
+                        <div className="quick-user-chips">
+                          {displayMujeres.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              className="user-quick-chip chip-female"
+                              onClick={() => handleQuickLoginUser(u)}
+                              title={`Ingresar como ${u.nombre} ${u.apellido}`}
+                            >
+                              {getChipDisplayName(u)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {displayHombres.length > 0 && (
+                      <div className="quick-user-select-box">
+                        <span className="quick-user-label">👨 Ingresar como Hombre:</span>
+                        <div className="quick-user-chips">
+                          {displayHombres.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              className="user-quick-chip chip-male"
+                              onClick={() => handleQuickLoginUser(u)}
+                              title={`Ingresar como ${u.nombre} ${u.apellido}`}
+                            >
+                              {getChipDisplayName(u)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

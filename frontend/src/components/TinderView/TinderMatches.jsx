@@ -8,6 +8,7 @@ export default function TinderMatches({
   onBackToExplore,
   onOpenDetail,
   onOpenActions,
+  onUnmatch,
   activeChatUser,
   onSelectChatUser,
 }) {
@@ -182,9 +183,19 @@ export default function TinderMatches({
                 </button>
                 <button
                   type="button"
+                  className="btn btn-ghost btn-sm btn-unmatch"
+                  onClick={() => onUnmatch && onUnmatch(currentChatUser)}
+                  title="Terminar match"
+                  aria-label="Terminar match"
+                >
+                  <span aria-hidden="true">💔</span> <span className="btn-unmatch-text">Terminar match</span>
+                </button>
+                <button
+                  type="button"
                   className="btn btn-ghost btn-sm"
                   onClick={() => onOpenActions && onOpenActions(currentChatUser)}
-                  title="Acciones del perfil" aria-label="Acciones del perfil"
+                  title="Acciones del perfil"
+                  aria-label="Acciones del perfil"
                 >
                   ⚠️
                 </button>

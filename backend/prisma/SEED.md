@@ -13,8 +13,8 @@ Desde la raíz también podés ejecutar `npm --prefix backend run seed`.
 El seed no aplica migraciones automáticamente ni reinicia la base.
 
 Se crean o reutilizan 20 hobbies, 9 ubicaciones y los tipos Estándar y Premium.
-Los 18 perfiles ficticios usan emails `@seed.matchify.test`; sus IDs se imprimen
-al terminar. No se asume que Mateo tenga ID 1.
+Los 20 perfiles famosos (10 mujeres y 10 hombres) usan emails `@seed.matchify.test`; sus IDs se imprimen
+al terminar. Cada perfil cuenta con al menos 3 fotos en alta resolución.
 
 Las fechas de nacimiento son fijas. Estos resultados corresponden al 28/09/2026,
 para Mateo Ferrero (Rosario, 30 km, edades inclusivas de 25 a 35 años):

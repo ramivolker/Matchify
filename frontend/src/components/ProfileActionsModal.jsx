@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ProfileActionsModal({ user, confirming, pending, onClose, onReport, onRequestBlock, onConfirmBlock }) {
+export default function ProfileActionsModal({ user, confirming, pending, onClose, onReport, onRequestBlock, onConfirmBlock, onUnmatch }) {
   if (!user) return null;
 
   return (
@@ -27,7 +27,13 @@ export default function ProfileActionsModal({ user, confirming, pending, onClose
         ) : (
           <>
             <div className="modal-body profile-actions-options">
-              <button type="button" className="profile-action-button profile-action-block" onClick={onRequestBlock} autoFocus>
+              {onUnmatch && (
+                <button type="button" className="profile-action-button profile-action-unmatch" onClick={onUnmatch} autoFocus>
+                  <span className="profile-action-icon" aria-hidden="true" style={{ fontSize: '1.1rem' }}>💔</span>
+                  <span>Terminar match</span>
+                </button>
+              )}
+              <button type="button" className="profile-action-button profile-action-block" onClick={onRequestBlock} autoFocus={!onUnmatch}>
                 <span className="profile-action-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" focusable="false">
                     <circle cx="12" cy="12" r="9" /><path d="m5.64 5.64 12.72 12.72" />
