@@ -612,7 +612,7 @@ export default function App() {
       />
 
       {/* Contenido Principal */}
-      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''}`}>
+      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''} ${!isAdmin && currentUserTab === 'matches' ? 'main-content-matches' : ''}`}>
         {/* =========================================================================
             VISTA 1: EXCLUSIVA PARA ADMINISTRADOR
             ========================================================================= */}
@@ -694,7 +694,7 @@ export default function App() {
             VISTA 2: EXCLUSIVA PARA USUARIO CON PERFIL NORMAL
             ========================================================================= */}
         {!isAdmin && (
-          <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''}`}>
+          <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''} ${currentUserTab === 'matches' ? 'matches-view' : ''}`}>
 
             {/* Vista de Deslizar Perfiles */}
             {tinderError && (
