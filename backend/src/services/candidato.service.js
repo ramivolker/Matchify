@@ -1,3 +1,4 @@
+const { comprobarUsuarioActivo } = require('./usuario-activo.service');
 const candidatoRepository = require("../repositories/candidato.repository");
 const { validarId } = require("../validators/usuario.validator");
 const NotFoundError = require("../errors/not-found-error");
@@ -41,6 +42,8 @@ const obtenerCandidatos = async (usuarioId) => {
   if (!solicitante) {
     throw new NotFoundError("Usuario no encontrado");
   }
+
+  comprobarUsuarioActivo(solicitante);
 
   if (!solicitante.preferencia) {
     throw new ValidationError("El usuario debe configurar una preferencia para buscar candidatos");

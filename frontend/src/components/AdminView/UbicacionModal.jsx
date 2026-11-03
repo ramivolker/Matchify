@@ -37,7 +37,7 @@ export default function UbicacionModal({ isOpen, onClose, onSubmit, ubicacion })
   };
 
   return (
-    <div className="modal" role="dialog" aria-modal="true">
+    <div className="modal" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} role="dialog" aria-modal="true">
       <div className="modal-dialog">
         <div className="modal-header">
           <h3>{ubicacion ? `Editar Ubicación: ${ubicacion.ciudad}` : 'Crear Nueva Ubicación'}</h3>

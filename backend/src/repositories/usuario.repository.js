@@ -43,7 +43,10 @@ const eliminar = async (id) => {
   return prisma.usuario.delete({ where: { id } });
 };
 
+const obtenerEstado = (id, tx = prisma) => tx.usuario.findUnique({ where: { id }, select: { id: true, activo: true } });
+
 module.exports = {
+  obtenerEstado,
   crear,
   obtenerTodos,
   obtenerPorId,

@@ -1,3 +1,4 @@
+const { comprobarUsuarioActivo } = require('./usuario-activo.service');
 const matchRepository = require("../repositories/match.repository");
 const usuarioRepository = require('../repositories/usuario.repository');
 const { validarId } = require('../validators/mensaje.validator');
@@ -6,7 +7,7 @@ const AppError = require('../errors/app-error');
 
 async function obtenerMatchesPorUsuario(usuarioId) {
   validarId(usuarioId, 'usuarioId');
-  if (!await usuarioRepository.obtenerPorId(usuarioId)) throw new NotFoundError('Usuario no encontrado');
+  comprobarUsuarioActivo(await usuarioRepository.obtenerPorId(usuarioId));
   const matches = await matchRepository.obtenerMatchesPorUsuario(usuarioId);
   return matches.map(({ mensajes, _count, ...match }) => ({
     ...match,

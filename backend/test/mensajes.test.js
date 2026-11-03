@@ -4,7 +4,7 @@ const express = require('express');
 
 let messages = [];
 let blocked = [];
-const users = [1, 2, 3, 4].map((id) => ({ id, nombre: `Usuario ${id}` }));
+const users = [1, 2, 3, 4].map((id) => ({ id, nombre: `Usuario ${id}`, activo: true }));
 const matches = [{ id: 10, usuario1Id: 1, usuario2Id: 2, activo: true, fecha: new Date('2026-01-01') }];
 const ordered = (rows) => [...rows].sort((a, b) => a.enviadoEn - b.enviadoEn || a.id - b.id);
 const prisma = {

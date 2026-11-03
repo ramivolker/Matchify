@@ -29,7 +29,7 @@ export default function MatchCelebrationModal({
   };
 
   return (
-    <div className="modal modal-match-celebration" role="dialog" aria-modal="true">
+    <div className="modal modal-match-celebration" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} role="dialog" aria-modal="true">
       <div className="modal-dialog modal-match-dialog">
         <div className="match-badge-banner">¡ES UN MATCH!</div>
         <p className="match-subheading">

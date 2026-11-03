@@ -10,7 +10,7 @@ export default function DeleteConfirmModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal modal-danger">
+    <div className="modal modal-danger" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog modal-dialog-sm">
         <div className="modal-body text-center">
           <div className="danger-icon-badge">🗑️</div>

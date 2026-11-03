@@ -27,11 +27,11 @@ export default function UserDetailModal({ isOpen, onClose, usuario }) {
     : 'Sin asignar';
 
   return (
-    <div className="modal">
+    <div className="modal" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog">
         <div className="modal-header">
           <h3>Detalle del Perfil</h3>
-          <button className="btn-close" onClick={onClose} aria-label="Cerrar">
+          <button type="button" className="btn-close profile-detail-close" onClick={onClose} aria-label="Cerrar">
             &times;
           </button>
         </div>
@@ -108,11 +108,6 @@ export default function UserDetailModal({ isOpen, onClose, usuario }) {
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cerrar
-          </button>
-        </div>
       </div>
     </div>
   );

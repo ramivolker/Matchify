@@ -1,3 +1,4 @@
+const { comprobarUsuarioActivo } = require('./usuario-activo.service');
 const preferenciaRepository = require("../repositories/preferencia.repository");
 const usuarioRepository = require("../repositories/usuario.repository");
 const { validarUsuarioId, validarPreferencia } = require("../validators/preferencia.validator");
@@ -11,10 +12,8 @@ const serializar = (preferencia) => ({
 
 const comprobarUsuario = async (usuarioId) => {
   const usuario = await usuarioRepository.obtenerPorId(usuarioId);
+  comprobarUsuarioActivo(usuario);
 
-  if (!usuario) {
-    throw new NotFoundError("Usuario no encontrado");
-  }
 };
 
 const crear = async (usuarioId, datos) => {

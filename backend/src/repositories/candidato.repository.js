@@ -3,7 +3,7 @@ const prisma = require("../config/prisma");
 const obtenerSolicitante = async (usuarioId) => {
   return prisma.usuario.findUnique({
     where: { id: usuarioId },
-    select: { id: true, preferencia: { include: { generos: true } }, ubicacion: true },
+    select: { id: true, activo: true, preferencia: { include: { generos: true } }, ubicacion: true },
   });
 };
 

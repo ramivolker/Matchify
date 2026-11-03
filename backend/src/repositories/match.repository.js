@@ -62,6 +62,11 @@ async function desactivarMatchPorId(matchId) {
 }
 
 module.exports = {
+  // Consulta histórica: no filtrar por actividad del match ni de sus participantes.
+  obtenerEntreUsuarios: (a, b) => prisma.match.findUnique({
+    where: { usuario1Id_usuario2Id: { usuario1Id: Math.min(a, b), usuario2Id: Math.max(a, b) } },
+    select: { id: true, activo: true },
+  }),
   crearMatch,
   obtenerMatchesPorUsuario,
   desactivarMatchEntreUsuarios,

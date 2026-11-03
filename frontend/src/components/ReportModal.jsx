@@ -1,33 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+import { api } from '../services/api';
 
 export default function ReportModal({ isOpen, userToReport, onClose, onSubmitReport }) {
   const [reason, setReason] = useState('inappropriate');
   const [details, setDetails] = useState('');
-  const [blockUser, setBlockUser] = useState(true);
+  const [motivos, setMotivos] = useState({});
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const lock = useRef(false);
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setError(''); setMotivos({}); setReason('inappropriate'); setDetails('');
+    api.getMotivosReporte().then((data) => { if (!cancelled) setMotivos(data); })
+      .catch((err) => { if (!cancelled) setError(err.message); });
+    return () => { cancelled = true; };
+  }, [isOpen, userToReport?.id]);
 
   if (!isOpen || !userToReport) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmitReport({
-      userId: userToReport.id,
-      userName: `${userToReport.nombre} ${userToReport.apellido}`,
-      reason,
-      details,
-      blocked: blockUser,
-    });
-    setDetails('');
-    onClose();
+    if (lock.current) return;
+    lock.current = true; setPending(true); setError('');
+    try {
+      await onSubmitReport({ userId: userToReport.id, reason, details });
+      setDetails('');
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally { lock.current = false; setPending(false); }
   };
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="report-title">
+    <div className="modal" onClick={(event) => { if (event.target === event.currentTarget && !pending) onClose(); }} role="dialog" aria-modal="true" aria-labelledby="report-title">
       <div className="modal-dialog modal-dialog-sm">
         <div className="modal-header">
           <h3 id="report-title" style={{ color: 'var(--danger)' }}>
             ⚠️ Reportar Perfil
           </h3>
-          <button className="btn-close" onClick={onClose} aria-label="Cerrar modal">
+          <button className="btn-close" onClick={pending ? undefined : onClose} disabled={pending} aria-label="Cerrar modal">
             &times;
           </button>
         </div>
@@ -46,11 +59,7 @@ export default function ReportModal({ isOpen, userToReport, onClose, onSubmitRep
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               >
-                <option value="inappropriate">Contenido o fotos inapropiadas</option>
-                <option value="spam">Spam, estafa o cuenta falsa</option>
-                <option value="harassment">Acoso o comportamiento irrespetuoso</option>
-                <option value="underage">Sospecha de menor de edad</option>
-                <option value="other">Otro motivo</option>
+                {Object.entries(motivos).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
 
@@ -67,25 +76,15 @@ export default function ReportModal({ isOpen, userToReport, onClose, onSubmitRep
               />
             </div>
 
-            <div style={{ marginTop: '1rem' }}>
-              <label className="toggle-control">
-                <input
-                  type="checkbox"
-                  checked={blockUser}
-                  onChange={(e) => setBlockUser(e.target.checked)}
-                />
-                <span className="toggle-switch"></span>
-                <span className="toggle-label">Bloquear a este usuario para que no vuelva a aparecer</span>
-              </label>
-            </div>
+            {error && <p role="alert" style={{ color: 'var(--danger)' }}>{error}</p>}
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button type="button" className="btn btn-secondary" onClick={pending ? undefined : onClose} disabled={pending}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-danger">
-              Enviar Reporte
+            <button type="submit" className="btn btn-danger" disabled={pending || !Object.keys(motivos).length}>
+              {pending ? 'Enviando...' : 'Enviar Reporte'}
             </button>
           </div>
         </form>

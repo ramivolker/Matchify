@@ -12,7 +12,7 @@ async function bloquear(req, res) {
 
     res.status(201).json(bloqueo);
   } catch (error) {
-    res.status(400).json({
+    res.status(error.statusCode || 400).json({
       error: error.message,
     });
   }
@@ -26,7 +26,7 @@ async function obtenerBloqueados(req, res) {
 
     res.json(bloqueados);
   } catch (error) {
-    res.status(400).json({
+    res.status(error.statusCode || 400).json({
       error: error.message,
     });
   }
@@ -47,7 +47,7 @@ async function desbloquear(req, res) {
       bloqueo,
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(error.statusCode || 400).json({
       error: error.message,
     });
   }

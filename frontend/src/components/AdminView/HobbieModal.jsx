@@ -40,7 +40,7 @@ export default function HobbieModal({ isOpen, onClose, onSubmit, hobbie }) {
   };
 
   return (
-    <div className="modal">
+    <div className="modal" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="modal-dialog">
         <div className="modal-header">
           <h3>{hobbie ? `Editar Hobbie: ${hobbie.nombre}` : 'Crear Nuevo Hobbie'}</h3>

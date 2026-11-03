@@ -49,6 +49,9 @@ model Usuario {
   mensajes Mensaje[]
   fotos    Foto[]
 
+  reportesRealizados Reporte[] @relation("ReportesRealizados")
+  reportesRecibidos Reporte[] @relation("ReportesRecibidos")
+
   bloqueosRealizados Bloqueo[] @relation("BloqueosRealizados")
   bloqueosRecibidos  Bloqueo[] @relation("BloqueosRecibidos")
 }
@@ -178,4 +181,28 @@ model Foto {
   creadoEn  DateTime @default(now())
 
   @@index([usuarioId])
+}
+
+
+enum EstadoReporte {
+  PENDIENTE
+  RESUELTO
+  DESCARTADO
+}
+
+model Reporte {
+  id Int @id @default(autoincrement())
+  usuarioReportanteId Int
+  usuarioReportadoId Int
+  motivo String
+  descripcion String? @db.VarChar(300)
+  estado EstadoReporte @default(PENDIENTE)
+  creadoEn DateTime @default(now())
+  resueltoEn DateTime?
+  usuarioReportante Usuario @relation("ReportesRealizados", fields: [usuarioReportanteId], references: [id], onDelete: Cascade)
+  usuarioReportado Usuario @relation("ReportesRecibidos", fields: [usuarioReportadoId], references: [id], onDelete: Cascade)
+
+  @@index([estado, creadoEn])
+  @@index([usuarioReportanteId])
+  @@index([usuarioReportadoId])
 }

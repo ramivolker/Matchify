@@ -115,6 +115,12 @@ export default function Sidebar({
               <span className="nav-label">Ubicaciones</span>
               <span className="counter-badge">{stats.totalUbicaciones}</span>
             </button>
+            <button className={`nav-item ${currentAdminTab === 'reportes' ? 'active' : ''}`}
+              onClick={() => { setCurrentAdminTab('reportes'); onClose(); }}>
+              <span className="nav-icon" aria-hidden="true">&#9873;</span>
+              <span className="nav-label">Reportes</span>
+              <span className="counter-badge">{stats.reportesPendientes}</span>
+            </button>
           </nav>
         )}
 

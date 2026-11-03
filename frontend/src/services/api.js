@@ -35,7 +35,21 @@ const cleanUserPayload = (data) => {
   return payload;
 };
 
+async function reporteRequest(path = '', options) {
+  const res = await fetch(`${API_BASE}/reportes${path}`, options);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.message || 'Error al procesar reporte');
+  return data;
+}
+
 export const api = {
+  getMotivosReporte: () => reporteRequest('/motivos'),
+  crearReporte: (datos) => reporteRequest('', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }),
+  getReportes: (estado) => reporteRequest(estado ? `?estado=${encodeURIComponent(estado)}` : ''),
+  getReporte: (id) => reporteRequest(`/${id}`),
+  getConversacionReporte: (id, options) => reporteRequest(`/${id}/conversacion`, options),
+  actualizarEstadoReporte: (id, estado) => reporteRequest(`/${id}/estado`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado }) }),
+
   async getPreferencia(usuarioId) {
     const res = await fetch(`${API_BASE}/usuarios/${usuarioId}/preferencia`);
     const data = await res.json();
@@ -250,6 +264,32 @@ export const api = {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || json.message || 'Error al reordenar fotos');
     return json;
+  },
+
+  async getUsuario(id) {
+    const res = await fetch(`${API_BASE}/usuarios/${id}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al consultar usuario');
+    return data;
+  },
+  async actualizarEstadoUsuario(id, activo) {
+    const res = await fetch(`${API_BASE}/usuarios/${id}/estado`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al actualizar estado de cuenta');
+    return data;
+  },
+  async actualizarPerfil(id, datos) {
+    const payload = cleanUserPayload(datos);
+    delete payload.activo;
+    delete payload.tipoUsuarioId;
+    const res = await fetch(`${API_BASE}/usuarios/${id}/perfil`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al guardar perfil');
+    return data;
   },
 
   // Usuarios
