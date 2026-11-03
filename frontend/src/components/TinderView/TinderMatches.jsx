@@ -8,10 +8,20 @@ export default function TinderMatches({
   onBackToExplore,
   onOpenDetail,
   onOpenActions,
+  onUnmatch,
   activeChatUser,
   onSelectChatUser,
 }) {
   const currentChatUser = matches.find((match) => match.matchId === activeChatUser?.matchId) || null;
+
+  // En pantallas de escritorio/tablet (>= 768px), si no hay chat activo, seleccionar el primero automáticamente
+  React.useEffect(() => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+    if (isDesktop && !currentChatUser && matches.length > 0 && onSelectChatUser) {
+      onSelectChatUser(matches[0]);
+    }
+  }, [currentChatUser, matches, onSelectChatUser]);
+
   const chat = useMatchMessages(currentChatUser?.matchId, currentUserId);
   const currentMessages = chat.messages;
   const inputText = chat.input;
@@ -25,7 +35,62 @@ export default function TinderMatches({
   return (
     <div className="matches-chat-container">
       {/* =========================================================================
-          PANEL IZQUIERDO: LISTA DE MATCHES Y CONVERSACIONES
+          VISTA ESCRITORIO / TABLET (>= 768px):
+          Barra superior con slider de conexiones para cambiar de chat
+          ========================================================================= */}
+      <div className="matches-connections-bar">
+        <div className="matches-connections-header">
+          <div className="matches-header-title-box">
+            <h3>Tus Conexiones</h3>
+            <span className="matches-count-subtitle">
+              {matches.length} {matches.length === 1 ? 'match total' : 'matches totales'}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={onBackToExplore}
+          >
+            🔥 Explorar
+          </button>
+        </div>
+
+        {matches.length === 0 ? (
+          <div className="empty-connections-slider">
+            <span style={{ fontSize: '1.25rem' }}>⏳</span>
+            <p>Desliza a la derecha en la pestaña Explorar para conseguir matches.</p>
+          </div>
+        ) : (
+          <div className="connections-slider-track">
+            {matches.map((m) => {
+              const isActive = currentChatUser?.matchId === m.matchId;
+              return (
+                <button
+                  key={m.matchId}
+                  type="button"
+                  className={`connection-slider-item ${isActive ? 'active' : ''}`}
+                  onClick={() => onSelectChatUser(m)}
+                  title={`Conversar con ${m.nombre} ${m.apellido}`}
+                >
+                  <div className="connection-avatar-wrapper">
+                    <UserAvatar user={m} size="md" className="connection-avatar-inner" />
+                    {m.noLeidos > 0 && (
+                      <span className="connection-unread-badge" aria-label={`${m.noLeidos} mensajes sin leer`}>
+                        {m.noLeidos}
+                      </span>
+                    )}
+                  </div>
+                  <span className="connection-name">{m.nombre}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* =========================================================================
+          VISTA MOBILE (< 768px):
+          Panel tradicional con lista completa de conexiones (se oculta al abrir un chat)
           ========================================================================= */}
       <div className={`matches-sidebar-panel ${currentChatUser ? 'hidden-mobile' : ''}`}>
         {/* Header */}
@@ -65,7 +130,11 @@ export default function TinderMatches({
                 >
                   <div className="match-avatar-ring">
                     <UserAvatar user={m} size="sm" className="match-avatar-inner" />
-
+                    {m.noLeidos > 0 && (
+                      <span className="slider-unread-badge" aria-label={`${m.noLeidos} mensajes sin leer`}>
+                        {m.noLeidos}
+                      </span>
+                    )}
                   </div>
                   <span className="match-pill-name">{m.nombre}</span>
                 </button>
@@ -96,7 +165,6 @@ export default function TinderMatches({
                   >
                     <div className="conversation-avatar">
                       <UserAvatar user={m} size="md" className="conversation-avatar-inner" />
-
                     </div>
 
                     <div className="conversation-content">
@@ -107,7 +175,11 @@ export default function TinderMatches({
                         <span className="conversation-time">
                           {formatTime(lastMsg?.enviadoEn ?? m.fechaMatch)}
                         </span>
-                        {m.noLeidos > 0 && <span className="badge badge-tag" aria-label={`${m.noLeidos} mensajes sin leer`}>{m.noLeidos}</span>}
+                        {m.noLeidos > 0 && (
+                          <span className="badge badge-tag" aria-label={`${m.noLeidos} mensajes sin leer`}>
+                            {m.noLeidos}
+                          </span>
+                        )}
                       </div>
                       <p className="conversation-last-msg">
                         {lastMsg
@@ -124,14 +196,16 @@ export default function TinderMatches({
       </div>
 
       {/* =========================================================================
-          PANEL DERECHO: VISTA DE CHAT INTERACTIVO
+          PANEL DE CHAT ACTIVO:
+          - En >= 768px: ocupa todo el ancho del fondo blanco por debajo del slider
+          - En < 768px: ocupa el 100% en móvil cuando se selecciona un chat (con botón atrás ←)
           ========================================================================= */}
       <div className={`chat-active-panel ${!currentChatUser ? 'hidden-mobile' : ''}`}>
         {!currentChatUser ? (
           <div className="chat-placeholder-state">
             <div className="chat-placeholder-icon">💬</div>
-            <h3>Selecciona un match</h3>
-            <p>Elige a una persona de la lista izquierda para comenzar a chatear.</p>
+            <h3>Selecciona una conexión</h3>
+            <p>Haz clic en cualquiera de tus conexiones arriba para comenzar a chatear.</p>
             <button
               type="button"
               className="btn btn-primary btn-sm"
@@ -150,6 +224,7 @@ export default function TinderMatches({
                 className="btn-back-chat-mobile"
                 onClick={() => onSelectChatUser(null)}
                 title="Volver a la lista"
+                aria-label="Volver a la lista"
               >
                 ←
               </button>
@@ -161,9 +236,8 @@ export default function TinderMatches({
               >
                 <div className="chat-user-avatar">
                   <UserAvatar user={currentChatUser} size="md" className="chat-avatar-inner" />
-
                 </div>
-                <div>
+                <div className="chat-user-header-text">
                   <div className="chat-user-name-title">
                     {currentChatUser.nombre} {currentChatUser.apellido}{' '}
                     <span className="chat-verified-check">✓</span>
@@ -177,14 +251,26 @@ export default function TinderMatches({
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => onOpenDetail(currentChatUser)}
+                  title="Ver perfil completo"
+                  aria-label="Ver perfil"
                 >
-                  👤 Perfil
+                  <span aria-hidden="true">👤</span> <span className="btn-profile-text">Perfil</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm btn-unmatch"
+                  onClick={() => onUnmatch && onUnmatch(currentChatUser)}
+                  title="Terminar match"
+                  aria-label="Terminar match"
+                >
+                  <span aria-hidden="true">💔</span> <span className="btn-unmatch-text">Terminar match</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm btn-report-match"
                   onClick={() => onOpenActions && onOpenActions(currentChatUser)}
-                  title="Acciones del perfil" aria-label="Acciones del perfil"
+                  title="Acciones del perfil"
+                  aria-label="Acciones del perfil"
                 >
                   ⚠️
                 </button>
@@ -218,6 +304,7 @@ export default function TinderMatches({
               </div>
 
               {chat.loading && <p role="status">Cargando conversación…</p>}
+
               {/* Mensajes */}
               {currentMessages.map((msg) => (
                 <div
@@ -228,13 +315,15 @@ export default function TinderMatches({
                     <p className="chat-bubble-text">{msg.contenido}</p>
                     <div className="chat-bubble-meta">
                       <span className="chat-time">{formatTime(msg.enviadoEn)}</span>
-                      {msg.emisorId === currentUserId && <span className="chat-status-check" aria-label={msg.leido ? 'Leído' : 'Enviado'}>{msg.leido ? '✓✓' : '✓'}</span>}
+                      {msg.emisorId === currentUserId && (
+                        <span className="chat-status-check" aria-label={msg.leido ? 'Leído' : 'Enviado'}>
+                          {msg.leido ? '✓✓' : '✓'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
-
-
             </div>
 
             {/* Conversation Starters Chips */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TableSkeleton } from '../common/SkeletonLoader';
+import UserAvatar from '../common/UserAvatar';
 
 export default function UsuariosTab({
   usuarios,
@@ -132,7 +133,6 @@ export default function UsuariosTab({
             ) : (
               usuariosFiltrados.map((u) => {
                 const hobbiesCount = u.hobbies ? u.hobbies.length : 0;
-                const iniciales = `${u.nombre?.charAt(0) || 'U'}${u.apellido?.charAt(0) || ''}`.toUpperCase();
                 const ubicacionTexto = u.ubicacion
                   ? `${u.ubicacion.ciudad}, ${u.ubicacion.provincia}`
                   : 'Sin asignar';
@@ -141,7 +141,7 @@ export default function UsuariosTab({
                   <tr key={u.id}>
                     <td>
                       <div className="user-cell">
-                        <div className="avatar">{iniciales}</div>
+                        <UserAvatar user={u} size="sm" className="admin-table-avatar" />
                         <div>
                           <div className="user-name-text">
                             {u.nombre} {u.apellido}

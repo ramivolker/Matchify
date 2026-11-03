@@ -40,27 +40,31 @@ const ubicaciones = [
 
 const tipos = ['Estándar', 'Premium'];
 
-// Fechas fijas: los escenarios de edad están documentados para septiembre de 2026.
-// Las claves de email son estables y no dependen de los IDs de la base.
+// 20 Famosos reconocidos mundialmente: 10 Mujeres y 10 Hombres
 const usuarios = [
-  ['Mateo', 'Ferrero', 'mateo.ferrero', '1997-04-12', 'Rosario', 'Estándar', true, [30, 25, 35], ['Programación', 'Videojuegos', 'Running', 'Música'], 'Trabajo como desarrollador y salgo a correr por la costanera. Me sumo a un café y una buena charla.', 'MASCULINO', ['FEMENINO']],
-  ['Lucía', 'Benítez', 'lucia.benitez', '1998-08-23', 'Rosario', 'Premium', true, [20, 26, 36], ['Fotografía', 'Cine', 'Viajes'], 'Soy diseñadora y siempre llevo la cámara en la mochila. Los domingos me gusta descubrir cafés de barrio.', 'FEMENINO', ['MASCULINO', 'FEMENINO']],
-  ['Tomás', 'Acosta', 'tomas.acosta', '1996-02-17', 'San Nicolás de los Arroyos', 'Estándar', true, [80, 24, 36], ['Fútbol', 'Música', 'Cocina'], 'Doy clases de música y juego al fútbol con amigos. Estoy aprendiendo a hacer pasta casera.', 'NO_BINARIO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO']],
-  ['Sofía', 'Molina', 'sofia.molina', '1999-06-09', 'Funes', 'Estándar', true, [30, 25, 34], ['Pádel', 'Mascotas', 'Lectura', 'Series'], 'Veterinaria, fan de las novelas policiales y del pádel después del trabajo. Convivo con dos perros rescatados.', 'OTRO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'OTRO']],
-  ['Bruno', 'Sosa', 'bruno.sosa', '2006-01-20', 'Rosario', 'Estándar', true, [15, 18, 24], ['Videojuegos', 'Básquet', 'Tecnología'], 'Estudio sistemas y juego al básquet en el club. Busco gente para compartir juegos y recitales.', 'MASCULINO', ['FEMENINO']],
-  ['Valentina', 'Ríos', 'valentina.rios', '1995-11-04', 'Roldán', 'Premium', true, [45, 27, 38], ['Ciclismo', 'Cocina', 'Viajes', 'Fotografía'], 'Los sábados salgo en bici y después cocino para amigos. Mi próximo proyecto es recorrer el sur.', 'FEMENINO', ['MASCULINO', 'FEMENINO']],
-  ['Julián', 'Pereyra', 'julian.pereyra', '1994-03-15', 'Granadero Baigorria', 'Estándar', true, [25, 25, 35], ['Natación', 'Cine'], 'Trabajo en un laboratorio y nado para despejarme. Siempre acepto una recomendación de película.', 'OTRO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO']],
-  ['Camila', 'Duarte', 'camila.duarte', '2000-07-28', 'Villa Gobernador Gálvez', 'Estándar', true, [20, 24, 32], ['Arte', 'Música', 'Lectura'], 'Soy ilustradora y disfruto las ferias y los recitales chicos. Me gusta dibujar al aire libre.', 'NO_BINARIO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'OTRO']],
-  ['Nicolás', 'Vega', 'nicolas.vega', '1993-12-02', 'San Lorenzo', 'Premium', true, [50, 28, 40], ['Gimnasio', 'Tenis', 'Tecnología'], 'Ingeniero durante la semana, tenista amateur los fines de semana. Me encantan las sobremesas largas.', 'MASCULINO', ['FEMENINO']],
-  ['Florencia', 'Castro', 'florencia.castro', '1997-09-08', 'Pérez', 'Estándar', true, [20, 25, 35], ['Running', 'Mascotas', 'Series'], 'Soy docente y corro con un grupo del barrio. Mi plan tranquilo es una serie con mi gata al lado.', 'FEMENINO', ['MASCULINO', 'FEMENINO']],
-  ['Agustín', 'Medina', 'agustin.medina', '1998-05-31', 'Ramallo', 'Estándar', true, [100, 24, 34], ['Música', 'Cocina'], 'Disfruto caminar junto al río y cocinar al disco para amigos. Trabajo en un taller familiar.', 'NO_BINARIO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO']],
-  ['Paula', 'Herrera', 'paula.herrera', '1982-10-19', 'Funes', 'Premium', true, [40, 38, 50], ['Tenis', 'Lectura', 'Viajes'], 'Arquitecta y lectora de novelas históricas. Me gusta organizar escapadas cortas y jugar dobles.', 'OTRO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'OTRO']],
-  ['Federico', 'Navarro', 'federico.navarro', '1996-08-06', 'Rosario', 'Estándar', false, [30, 25, 35], ['Programación', 'Cine', 'Gimnasio'], 'Desarrollo aplicaciones y entreno temprano. Los viernes suelo elegir cine y pizza con amigos.', 'MASCULINO', ['FEMENINO']],
-  ['Martina', 'Cabrera', 'martina.cabrera', '2007-03-11', 'Granadero Baigorria', 'Estándar', true, [15, 18, 23], ['Arte', 'Fotografía', 'Música'], 'Estudio diseño y estoy armando mi primer portfolio. Me gustan las muestras y los paseos con cámara.', 'FEMENINO', ['MASCULINO', 'FEMENINO']],
-  ['Diego', 'Suárez', 'diego.suarez', '1980-06-24', 'San Nicolás de los Arroyos', 'Premium', true, [60, 38, 52], ['Ciclismo', 'Natación', 'Cocina'], 'Soy técnico electricista y me gusta moverme en bici. Cocino pan los domingos y siempre hago de más.', 'OTRO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO']],
-  ['Victoria', 'Ledesma', 'victoria.ledesma', '1992-01-30', 'Rosario', 'Premium', true, [10, 30, 40], ['Lectura', 'Cine', 'Arte', 'Música', 'Viajes', 'Cocina'], 'Traductora, curiosa por los idiomas y el cine. Me encanta probar una receta nueva con buena música.', 'NO_BINARIO', ['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'OTRO']],
-  ['Lautaro', 'Silva', 'lautaro.silva', '2002-12-13', 'Roldán', 'Estándar', true, [35, 20, 28], ['Fútbol', 'Videojuegos', 'Gimnasio'], 'Estudio educación física y entreno un equipo infantil. En casa no falta una partida con amigos.', 'MASCULINO', ['FEMENINO']],
-  ['Carolina', 'Paz', 'carolina.paz', '1995-04-05', 'Ramallo', 'Premium', true, [120, 27, 38], ['Fotografía', 'Mascotas', 'Running', 'Series'], 'Trabajo en turismo y salgo a correr cerca del río. Me gusta conocer lugares y viajar con mi perro.', 'FEMENINO', ['MASCULINO', 'FEMENINO']],
+  // ==================== 👩 MUJERES (10) ====================
+  ['Taylor', 'Swift', 'taylor.swift', '1989-12-13', 'Rosario', 'Premium', true, [50, 28, 45], ['Música', 'Lectura', 'Cocina', 'Mascotas'], 'Cantante y compositora. Amante de la buena música, las noches tranquilas cocinando y escribir historias en canciones.', 'FEMENINO', ['MASCULINO']],
+  ['Beyoncé', 'Knowles', 'beyonce.knowles', '1981-09-04', 'Rosario', 'Premium', true, [60, 35, 55], ['Música', 'Arte', 'Gimnasio', 'Viajes'], 'Cantante, bailarina y empresaria. Pasión, energía y disciplina en el escenario y en la vida.', 'FEMENINO', ['MASCULINO']],
+  ['Selena', 'Gomez', 'selena.gomez', '1992-07-22', 'Funes', 'Estándar', true, [40, 26, 40], ['Cocina', 'Música', 'Cine', 'Mascotas'], 'Actriz, cantante y empresaria (fundadora de Rare Beauty). Me gusta cocinar cosas ricas y rodearme de gente auténtica.', 'FEMENINO', ['MASCULINO']],
+  ['Zendaya', 'Coleman', 'zendaya', '1996-09-01', 'Rosario', 'Premium', true, [30, 24, 36], ['Cine', 'Arte', 'Fotografía', 'Mascotas'], 'Actriz y referente de moda (Euphoria, Dune, Spider-Man). Disfruto el buen cine, la moda y una charla honesta.', 'FEMENINO', ['MASCULINO']],
+  ['Robyn', 'Rihanna', 'rihanna', '1988-02-20', 'San Lorenzo', 'Premium', true, [50, 30, 48], ['Música', 'Arte', 'Viajes', 'Tecnología'], 'Cantante y empresaria (fundadora de Fenty Beauty). Auténtica, decidida y con ganas de pasarla bien.', 'FEMENINO', ['MASCULINO']],
+  ['Scarlett', 'Johansson', 'scarlett.johansson', '1984-11-22', 'Roldán', 'Premium', true, [45, 32, 50], ['Cine', 'Lectura', 'Arte', 'Viajes'], 'Actriz reconocida por mi papel en el UCM y Jurassic World. Apasionada del buen cine y una rica cena con amigos.', 'FEMENINO', ['MASCULINO']],
+  ['Sabrina', 'Carpenter', 'sabrina.carpenter', '1999-05-11', 'Funes', 'Estándar', true, [35, 22, 35], ['Música', 'Cine', 'Fotografía', 'Viajes'], 'Cantante pop y actriz. Con mucho humor, café en mano y siempre con una melodía pegadiza en la cabeza.', 'FEMENINO', ['MASCULINO']],
+  ['Shakira', 'Mebarak', 'shakira', '1977-02-02', 'Rosario', 'Premium', true, [70, 35, 55], ['Música', 'Tenis', 'Natación', 'Ciclismo'], 'Cantante y compositora. La música y el movimiento son mi vida. Fan de los deportes al aire libre y las buenas vibras.', 'FEMENINO', ['MASCULINO']],
+  ['Margot', 'Robbie', 'margot.robbie', '1990-07-02', 'Granadero Baigorria', 'Premium', true, [40, 28, 45], ['Cine', 'Natación', 'Viajes', 'Fotografía'], 'Actriz y productora (Barbie, El lobo de Wall Street). Aventurera, amante de la playa, los viajes y el cine.', 'FEMENINO', ['MASCULINO']],
+  ['Anya', 'Taylor-Joy', 'anya.taylorjoy', '1996-04-16', 'Rosario', 'Estándar', true, [30, 25, 38], ['Cine', 'Lectura', 'Arte', 'Series'], 'Actriz (Gambito de Dama, Furiosa). Con acento argento, fanática de los libros, el mate y las buenas historias.', 'FEMENINO', ['MASCULINO']],
+
+  // ==================== 👨 HOMBRES (10) ====================
+  ['Lionel', 'Messi', 'lionel.messi', '1987-06-24', 'Rosario', 'Premium', true, [40, 28, 42], ['Fútbol', 'Gimnasio', 'Mascotas', 'Videojuegos'], 'Futbolista rosarino. Mate, familia, fútbol y tranquilidad. Campeón del mundo disfrutando cada momento.', 'MASCULINO', ['FEMENINO']],
+  ['Cristiano', 'Ronaldo', 'cristiano.ronaldo', '1985-02-05', 'Rosario', 'Premium', true, [60, 25, 45], ['Fútbol', 'Gimnasio', 'Natación', 'Running'], 'Futbolista profesional. Dedicación total, superación diaria y mentalidad ganadora. SIUUU.', 'MASCULINO', ['FEMENINO']],
+  ['Timothée', 'Chalamet', 'timothee.chalamet', '1995-12-27', 'Funes', 'Estándar', true, [35, 22, 35], ['Cine', 'Arte', 'Lectura', 'Música'], 'Actor protagonista de Dune y Wonka. Amante de la literatura, el cine de autor y la música alternativa.', 'MASCULINO', ['FEMENINO']],
+  ['Pedro', 'Pascal', 'pedro.pascal', '1975-04-02', 'San Nicolás de los Arroyos', 'Premium', true, [80, 30, 55], ['Cine', 'Series', 'Viajes', 'Cocina'], 'Actor (The Last of Us, The Mandalorian). Con buena onda, café cargado y siempre listo para una buena charla.', 'MASCULINO', ['FEMENINO']],
+  ['Dwayne', 'Johnson', 'dwayne.johnson', '1972-05-02', 'San Lorenzo', 'Premium', true, [50, 35, 58], ['Gimnasio', 'Cocina', 'Cine', 'Tecnología'], 'Actor y ex-luchador profesional (The Rock). El trabajo duro, la sonrisa y la energía positiva nunca se negocian.', 'MASCULINO', ['FEMENINO']],
+  ['Benito', 'Martínez', 'bad.bunny', '1994-03-10', 'Rosario', 'Estándar', true, [40, 23, 36], ['Música', 'Arte', 'Básquet', 'Videojuegos'], 'Bad Bunny: cantante y compositor. Hago lo que me nace del corazón. Buena vibra, básquet y música siempre.', 'MASCULINO', ['FEMENINO']],
+  ['Keanu', 'Reeves', 'keanu.reeves', '1964-09-02', 'Ramallo', 'Premium', true, [100, 35, 60], ['Música', 'Cine', 'Ciclismo', 'Lectura'], 'Actor (John Wick, The Matrix). Perfil tranquilo, fanático de las motos, la música y las conversaciones sinceras.', 'MASCULINO', ['FEMENINO']],
+  ['Cillian', 'Murphy', 'cillian.murphy', '1976-05-25', 'Pérez', 'Estándar', true, [30, 32, 52], ['Cine', 'Música', 'Lectura', 'Running'], 'Actor ganador del Óscar por Oppenheimer. Disfruto la tranquilidad, la música en vinilo y un buen libro.', 'MASCULINO', ['FEMENINO']],
+  ['Justin', 'Bieber', 'justin.bieber', '1994-03-01', 'Roldán', 'Estándar', true, [45, 24, 36], ['Música', 'Básquet', 'Gimnasio', 'Ciclismo'], 'Cantante pop. Dedicado a la música, el crecimiento personal y disfrutar los momentos simples de la vida.', 'MASCULINO', ['FEMENINO']],
+  ['Leonardo', 'DiCaprio', 'leonardo.dicaprio', '1974-11-11', 'Rosario', 'Premium', true, [50, 25, 45], ['Cine', 'Viajes', 'Arte', 'Fotografía'], 'Actor y activista ambiental. Apasionado por el cine, la conservación del planeta y explorar el mundo.', 'MASCULINO', ['FEMENINO']],
 ].map(([nombre, apellido, clave, nacimiento, ciudad, tipo, activo, preferencia, intereses, biografia, genero, generos]) => ({
   nombre, apellido, email: `${clave}@seed.matchify.test`,
   fechaNacimiento: new Date(`${nacimiento}T00:00:00.000Z`),
@@ -68,85 +72,107 @@ const usuarios = [
   preferencia: { generos, distanciaMaxKm: preferencia[0], edadMinima: preferencia[1], edadMaxima: preferencia[2] },
 }));
 
+// Fotos reales para cada famoso (mínimo 3 fotos en alta resolución por persona)
 const fotosPorClave = {
-  'mateo.ferrero': [
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1480429370139-e0132c086e2a?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+  'taylor.swift': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/960px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Taylor_Swift_at_Yahoo_2007_%28cropped%29.jpg/960px-Taylor_Swift_at_Yahoo_2007_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/e/e8/TaylorSwiftApr09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
   ],
-  'lucia.benitez': [
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+  'beyonce.knowles': [
+    'https://upload.wikimedia.org/wikipedia/commons/b/b7/Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Beyonce_Knowles_at_age_19_%28cropped%29.jpeg/960px-Beyonce_Knowles_at_age_19_%28cropped%29.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/2/24/Beyonc%C3%A9_Army.mil_%28cropped%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
   ],
-  'tomas.acosta': [
-    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+  'selena.gomez': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/Selena_Gomez_at_the_2024_Toronto_International_Film_Festival_10_%28cropped%29.jpg/960px-Selena_Gomez_at_the_2024_Toronto_International_Film_Festival_10_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/e/ef/Selena_Gomez_2009.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Selena_Gomez_December_2010_2.jpg/960px-Selena_Gomez_December_2010_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'sofia.molina': [
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+  'zendaya': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Zendaya-byPhilipRomano.jpg/960px-Zendaya-byPhilipRomano.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Zendaya_by_Gage_Skidmore.jpg/960px-Zendaya_by_Gage_Skidmore.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Zendaya_-_2019_by_Glenn_Francis.jpg/960px-Zendaya_-_2019_by_Glenn_Francis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'bruno.sosa': [
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
+  'rihanna': [
+    'https://upload.wikimedia.org/wikipedia/commons/c/c2/Rihanna_Fenty_2018.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://upload.wikimedia.org/wikipedia/commons/6/66/RihannaJingle_Ball_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Rihanna_2010_cropped.jpg/960px-Rihanna_2010_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'valentina.rios': [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+  'scarlett.johansson': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Scarlett_Johansson-8588.jpg/960px-Scarlett_Johansson-8588.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/d/db/Scarlett_Johansson_2003.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://upload.wikimedia.org/wikipedia/commons/5/55/Scarlett_Johansson_Cannes_2005.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
   ],
-  'julian.pereyra': [
-    'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
+  'sabrina.carpenter': [
+    'https://upload.wikimedia.org/wikipedia/commons/6/61/Sabrina_Carpenter_-_O2_Arena_2025_-_086_%28cropped_2%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Sabrina_Carpenter_at_California_2_December_2016_%28cropped%29.jpg/960px-Sabrina_Carpenter_at_California_2_December_2016_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/6/6d/Sabrina_Carpenter_VMA_2018.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
   ],
-  'camila.duarte': [
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
+  'shakira': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/2023-11-16_Gala_de_los_Latin_Grammy%2C_03_%28cropped%2902.jpg/960px-2023-11-16_Gala_de_los_Latin_Grammy%2C_03_%28cropped%2902.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/a/a9/Shakira_in_concert.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Shakira_Rio_06.jpg/960px-Shakira_Rio_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'nicolas.vega': [
-    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
+  'margot.robbie': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Margot_Robbie_Wuthering_Heights_premiere_%28cropped%29.jpg/960px-Margot_Robbie_Wuthering_Heights_premiere_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Margot_Robbie_%28cropped%29.jpg/960px-Margot_Robbie_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Margot_Robbie_by_Gage_Skidmore.jpg/960px-Margot_Robbie_by_Gage_Skidmore.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'florencia.castro': [
-    'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80',
+  'anya.taylorjoy': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Anya_Taylor-Joy_at_the_2025_Toronto_International_Film_Festival._07_%28cropped%29.jpg/960px-Anya_Taylor-Joy_at_the_2025_Toronto_International_Film_Festival._07_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Anya_Taylor-Joy_by_Gage_Skidmore.jpg/960px-Anya_Taylor-Joy_by_Gage_Skidmore.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Anya_Taylor-Joy_at_the_2024_Cannes_Film_Festival_%28cropped%29.jpg/960px-Anya_Taylor-Joy_at_the_2024_Cannes_Film_Festival_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'agustin.medina': [
-    'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+  'lionel.messi': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/960px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/c/c1/Lionel_Messi_20180626.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Leo_messi_barce_2005.jpg/960px-Leo_messi_barce_2005.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'paula.herrera': [
-    'https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
+  'cristiano.ronaldo': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/960px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Ronaldo_-_Manchester_United_vs_Chelsea.jpg/960px-Ronaldo_-_Manchester_United_vs_Chelsea.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Cristiano_Ronaldo_and_Andriy_Shevchenko%2C_2007_%28cropped%29.jpg/960px-Cristiano_Ronaldo_and_Andriy_Shevchenko%2C_2007_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'federico.navarro': [
-    'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
+  'timothee.chalamet': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Timoth%C3%A9e_Chalamet-63482_%28cropped%29.jpg/960px-Timoth%C3%A9e_Chalamet-63482_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Timoth%C3%A9e_Chalamet_Call_Me_By_Your_Name_Press_Conference_Berlinale_2017_%28cropped%29.jpg/960px-Timoth%C3%A9e_Chalamet_Call_Me_By_Your_Name_Press_Conference_Berlinale_2017_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Timoth%C3%A9e_Chalamet_in_2018_%28cropped%29.jpg/960px-Timoth%C3%A9e_Chalamet_in_2018_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'martina.cabrera': [
-    'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+  'pedro.pascal': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Pedro_Pascal_at_the_2026_New_York_Film_Festival-042.jpg/960px-Pedro_Pascal_at_the_2026_New_York_Film_Festival-042.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Pedro_Pascal_%2814588037218%29.jpg/960px-Pedro_Pascal_%2814588037218%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Pedro_Pascal_%2836124158715%29.jpg/960px-Pedro_Pascal_%2836124158715%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'diego.suarez': [
-    'https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+  'dwayne.johnson': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg/960px-Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Dwayne_Johnson_at_the_2009_Tribeca_Film_Festival.jpg/960px-Dwayne_Johnson_at_the_2009_Tribeca_Film_Festival.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Dwayne_Johnson_2014.jpg/960px-Dwayne_Johnson_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'victoria.ledesma': [
-    'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+  'bad.bunny': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Bad_Bunny_2019_by_Glenn_Francis_%28cropped%29.jpg/960px-Bad_Bunny_2019_by_Glenn_Francis_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/d/d2/Bad_Bunny_2017_-_2.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Bad_Bunny_Performs.jpg/960px-Bad_Bunny_Performs.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'lautaro.silva': [
-    'https://images.unsplash.com/photo-1480429370139-e0132c086e2a?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+  'keanu.reeves': [
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Keanu_Reeves_at_TIFF_2025_02_%28Cropped%29.jpg/960px-Keanu_Reeves_at_TIFF_2025_02_%28Cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/2/2b/Keanu_reeves_anthony_griffith_%28cropped2%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Keanu_Reeves_%28Berlin_Film_Festival_2009%29_2.jpg/960px-Keanu_Reeves_%28Berlin_Film_Festival_2009%29_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
   ],
-  'carolina.paz': [
-    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80',
+  'cillian.murphy': [
+    'https://upload.wikimedia.org/wikipedia/commons/e/ed/Cillian_Murphy_at_the_London_premier_of_Steve_in_September_2025_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://upload.wikimedia.org/wikipedia/commons/6/68/Cillianmurphy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/Cillian_Murphy-2014.jpg/960px-Cillian_Murphy-2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+  ],
+  'justin.bieber': [
+    'https://upload.wikimedia.org/wikipedia/commons/6/68/Justin_Bieber_2.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Justin_Bieber_2010_2.jpg/960px-Justin_Bieber_2010_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    'https://upload.wikimedia.org/wikipedia/commons/7/75/Justin_Bieber_April_2011_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+  ],
+  'leonardo.dicaprio': [
+    'https://upload.wikimedia.org/wikipedia/commons/2/2d/LeoPTABFI191125-28_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://upload.wikimedia.org/wikipedia/commons/f/f9/Leonardo_DiCaprio.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    'https://upload.wikimedia.org/wikipedia/commons/2/25/Leonardo_DiCaprio_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
   ],
 };
 
@@ -181,6 +207,17 @@ async function seed(prisma) {
       ubicacionIds.set(ciudad, ubicacion.id);
     }
 
+    // Limpiar usuarios antiguos de seed que ya no pertenecen a la lista de famosos
+    const emailsActuales = usuarios.map((u) => u.email);
+    await tx.usuario.deleteMany({
+      where: {
+        email: {
+          endsWith: '@seed.matchify.test',
+          notIn: emailsActuales,
+        },
+      },
+    });
+
     const resultado = [];
     for (const perfil of usuarios) {
       const { ciudad, tipo, intereses, preferencia, ...datos } = perfil;
@@ -205,7 +242,7 @@ async function seed(prisma) {
         await tx.usuarioHobbie.upsert({ where: { usuarioId_hobbieId: relacion }, update: {}, create: relacion });
       }
 
-      // Sincronizar fotos de los perfiles de prueba
+      // Sincronizar fotos de los perfiles de prueba (al menos 3 fotos reales por cada famoso)
       const clave = datos.email.replace('@seed.matchify.test', '');
       const fotosUrls = fotosPorClave[clave] || [];
       await tx.foto.deleteMany({ where: { usuarioId: usuario.id } });
@@ -229,8 +266,8 @@ if (require.main === module) {
   seed(prisma)
     .then((perfiles) => {
       console.table(perfiles);
-      console.log('Seed completo: 20 hobbies, 9 ubicaciones y 18 perfiles. Likes y matches conservados sin cambios.');
-      console.log(`Referencia: GET /api/usuarios/${perfiles[0].id}/candidatos (Mateo Ferrero)`);
+      console.log(`Seed completo: 20 hobbies, 9 ubicaciones y ${perfiles.length} perfiles famosos.`);
+      console.log(`Referencia: GET /api/usuarios/${perfiles[0].id}/candidatos (${perfiles[0].nombre})`);
     })
     .catch((error) => { console.error(error); process.exitCode = 1; })
     .finally(() => prisma.$disconnect());

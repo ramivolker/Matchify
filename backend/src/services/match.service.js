@@ -3,6 +3,7 @@ const matchRepository = require("../repositories/match.repository");
 const usuarioRepository = require('../repositories/usuario.repository');
 const { validarId } = require('../validators/mensaje.validator');
 const NotFoundError = require('../errors/not-found-error');
+const AppError = require('../errors/app-error');
 
 async function obtenerMatchesPorUsuario(usuarioId) {
   validarId(usuarioId, 'usuarioId');
@@ -19,6 +20,26 @@ async function obtenerMatchesPorUsuario(usuarioId) {
   });
 }
 
+async function terminarMatch(matchId, usuarioId) {
+  validarId(matchId, 'matchId');
+  const match = await matchRepository.obtenerMatchPorId(matchId);
+  if (!match) throw new NotFoundError('Match no encontrado');
+
+  if (usuarioId !== undefined && usuarioId !== null && !Number.isNaN(usuarioId)) {
+    validarId(usuarioId, 'usuarioId');
+    if (match.usuario1Id !== usuarioId && match.usuario2Id !== usuarioId) {
+      throw new AppError('No pertenecés a este match', 403);
+    }
+  }
+
+  if (!match.activo) {
+    return match;
+  }
+
+  return matchRepository.desactivarMatchPorId(matchId);
+}
+
 module.exports = {
   obtenerMatchesPorUsuario,
+  terminarMatch,
 };

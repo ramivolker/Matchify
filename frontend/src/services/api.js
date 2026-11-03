@@ -98,6 +98,16 @@ export const api = {
     return data;
   },
 
+  async terminarMatch(matchId, usuarioId) {
+    const query = usuarioId ? `?usuarioId=${usuarioId}` : '';
+    const res = await fetch(`${API_BASE}/matches/${matchId}${query}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || data.message || 'Error al terminar el match');
+    return data;
+  },
+
   async getMensajes(matchId, usuarioId, { signal } = {}) {
     const res = await fetch(`${API_BASE}/matches/${matchId}/mensajes?usuarioId=${usuarioId}`, { signal });
     const data = await res.json();

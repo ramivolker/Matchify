@@ -14,6 +14,7 @@ import BottomNav from './components/BottomNav';
 import Toast from './components/Toast';
 import ReportModal from './components/ReportModal';
 import ProfileActionsModal from './components/ProfileActionsModal';
+import TerminarMatchModal from './components/TerminarMatchModal';
 
 // Admin Components & Modals
 import ReportesTab from './components/AdminView/ReportesTab';
@@ -215,6 +216,7 @@ export default function App() {
   const [detailModal, setDetailModal] = useState({ open: false, usuario: null });
   const [reportModal, setReportModal] = useState({ open: false, user: null });
   const [profileActions, setProfileActions] = useState({ user: null, confirming: false });
+  const [unmatchModal, setUnmatchModal] = useState({ open: false, user: null, pending: false });
 
   // 1. Cargar datos al iniciar
   useEffect(() => {
@@ -244,6 +246,7 @@ export default function App() {
     setCelebrationData(null);
     setReportModal({ open: false, user: null });
     setProfileActions({ user: null, confirming: false });
+    setUnmatchModal((prev) => (prev.pending ? prev : { open: false, user: null, pending: false }));
   };
 
   const showToast = (message, type = 'info') => {
@@ -408,6 +411,28 @@ export default function App() {
       showToast('Reporte enviado correctamente', 'success');
     } catch (err) { showToast(err.message, 'error'); throw err; }
     finally { reportLock.current = false; }
+  };
+
+  const handleOpenUnmatch = (user) => {
+    setProfileActions({ user: null, confirming: false });
+    setUnmatchModal({ open: true, user, pending: false });
+  };
+
+  const handleConfirmUnmatch = async () => {
+    const user = unmatchModal.user;
+    if (!user || unmatchModal.pending) return;
+
+    setUnmatchModal((prev) => ({ ...prev, pending: true }));
+    try {
+      await api.terminarMatch(user.matchId, currentTinderUserId);
+      setSessionMatches((prev) => prev.filter((m) => m.matchId !== user.matchId && m.id !== user.id));
+      setActiveChatUser((prev) => (prev?.matchId === user.matchId || prev?.id === user.id) ? null : prev);
+      showToast(`Terminaste el match con ${user.nombre}`, 'info');
+      setUnmatchModal({ open: false, user: null, pending: false });
+    } catch (err) {
+      showToast(err.message, 'error');
+      setUnmatchModal((prev) => ({ ...prev, pending: false }));
+    }
   };
 
   // Stats calculation
@@ -657,7 +682,7 @@ export default function App() {
       />
 
       {/* Contenido Principal */}
-      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''}`}>
+      <main className={`main-content ${!isAdmin && ['swipe', 'matches'].includes(currentUserTab) ? 'main-content-centered' : ''} ${!isAdmin && currentUserTab === 'matches' ? 'main-content-matches' : ''}`}>
         {/* =========================================================================
             VISTA 1: EXCLUSIVA PARA ADMINISTRADOR
             ========================================================================= */}
@@ -750,7 +775,7 @@ export default function App() {
             VISTA 2: EXCLUSIVA PARA USUARIO CON PERFIL NORMAL
             ========================================================================= */}
         {!isAdmin && (
-          <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''}`}>
+          <div className={`app-view-container ${currentUserTab === 'swipe' ? 'discovery-view' : ''} ${currentUserTab === 'matches' ? 'matches-view' : ''}`}>
 
             {/* Vista de Deslizar Perfiles */}
             {tinderError && (
@@ -819,6 +844,7 @@ export default function App() {
                   })
                 }
                 onOpenActions={(user) => setProfileActions({ user, confirming: false })}
+                onUnmatch={handleOpenUnmatch}
                 onShowToast={showToast}
                 activeChatUser={activeChatUser}
                 onSelectChatUser={(u) => setActiveChatUser(u)}
@@ -937,6 +963,7 @@ export default function App() {
         onClose={() => { if (!blockLock.current) setProfileActions({ user: null, confirming: false }); }}
         onRequestBlock={() => setProfileActions((prev) => ({ ...prev, confirming: true }))}
         onConfirmBlock={handleConfirmBlock}
+        onUnmatch={profileActions.user?.matchId ? () => handleOpenUnmatch(profileActions.user) : null}
         onReport={() => {
           setReportModal({ open: true, user: profileActions.user });
           setProfileActions({ user: null, confirming: false });
@@ -949,6 +976,14 @@ export default function App() {
         userToReport={reportModal.user}
         onClose={() => { if (!reportLock.current) setReportModal({ open: false, user: null }); }}
         onSubmitReport={handleSubmitReport}
+      />
+
+      <TerminarMatchModal
+        isOpen={unmatchModal.open}
+        user={unmatchModal.user}
+        pending={unmatchModal.pending}
+        onClose={() => { if (!unmatchModal.pending) setUnmatchModal({ open: false, user: null, pending: false }); }}
+        onConfirm={handleConfirmUnmatch}
       />
     </div>
   );

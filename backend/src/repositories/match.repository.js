@@ -46,6 +46,21 @@ async function desactivarMatchEntreUsuarios(usuarioAId, usuarioBId) {
   });
 }
 
+async function obtenerMatchPorId(matchId) {
+  return prisma.match.findUnique({
+    where: { id: matchId },
+  });
+}
+
+async function desactivarMatchPorId(matchId) {
+  return prisma.match.update({
+    where: { id: matchId },
+    data: {
+      activo: false,
+    },
+  });
+}
+
 module.exports = {
   // Consulta histórica: no filtrar por actividad del match ni de sus participantes.
   obtenerEntreUsuarios: (a, b) => prisma.match.findUnique({
@@ -55,5 +70,7 @@ module.exports = {
   crearMatch,
   obtenerMatchesPorUsuario,
   desactivarMatchEntreUsuarios,
+  obtenerMatchPorId,
+  desactivarMatchPorId,
 };
 
